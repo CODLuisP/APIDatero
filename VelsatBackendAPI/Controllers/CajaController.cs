@@ -209,7 +209,7 @@ namespace VelsatBackendAPI.Controllers
                     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                     var response = await client.PostAsync(
-                        "http://localhost:5003/api/iniciar-monitoreo",
+                        "http://66.240.210.125:5003/api/iniciar-monitoreo",
                         content
                     );
 
@@ -276,7 +276,7 @@ namespace VelsatBackendAPI.Controllers
                     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                     var response = await client.PostAsync(
-                        "http://localhost:5001/api/iniciar-monitoreo",
+                        "http://66.240.210.125:5001/api/iniciar-monitoreo",
                         content
                     );
 
@@ -355,7 +355,7 @@ namespace VelsatBackendAPI.Controllers
                     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                     var response = await client.PostAsync(
-                        "http://localhost:5002/api/iniciar-monitoreo",
+                        "http://66.240.210.125:5002/api/iniciar-monitoreo",
                         content
                     );
 
@@ -427,7 +427,7 @@ namespace VelsatBackendAPI.Controllers
                     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                     var response = await client.PostAsync(
-                        "http://localhost:5004/api/iniciar-monitoreo",
+                        "http://66.240.210.125:5004/api/iniciar-monitoreo",
                         content
                     );
 
