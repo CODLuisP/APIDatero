@@ -79,7 +79,7 @@ namespace VelsatBackendAPI.Data.Repositories
                 }
 
                 var sqlServerMobile = @"INSERT INTO servermobile (loginusu, servidor, tipo) 
-                                VALUES (@AccountID, 'https://villa.velsat.pe:2087', 'n')";
+                                VALUES (@AccountID, 'https://velsat.pe:2083', 'n')";
 
                 await gtsConnection.ExecuteAsync(sqlServerMobile, new { AccountID = usuario.AccountID });
 
@@ -158,6 +158,14 @@ namespace VelsatBackendAPI.Data.Repositories
 
             using var connection = CreateConnection();
             return await connection.ExecuteAsync(sql, device);
+        }
+
+        public async Task<int> DeleteDevice(string deviceID, string accountID)
+        {
+            var sql = @"DELETE FROM device WHERE deviceID = @DeviceID AND accountID = @AccountID";
+
+            using var connection = CreateConnection();
+            return await connection.ExecuteAsync(sql, new { DeviceID = deviceID, AccountID = accountID });
         }
 
         public async Task<IEnumerable<ConexDevice>> GetConexDesconex()

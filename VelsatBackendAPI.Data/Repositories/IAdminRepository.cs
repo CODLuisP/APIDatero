@@ -31,6 +31,8 @@ namespace VelsatBackendAPI.Data.Repositories
 
         Task<int> InsertDevice(DeviceAdmin device);
 
+        Task<int> DeleteDevice(string deviceID, string accountID);
+
         Task<IEnumerable<ConexDevice>> GetConexDesconex();
 
     }

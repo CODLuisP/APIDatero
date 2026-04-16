@@ -253,6 +253,31 @@ namespace VelsatBackendAPI.Controllers
             }
         }
 
+        [HttpDelete("DeleteDevice/{deviceID}/{accountID}")]
+        public async Task<IActionResult> DeleteDevice(string deviceID, string accountID)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(deviceID) || string.IsNullOrEmpty(accountID))
+                {
+                    return BadRequest(new { message = "El deviceID y accountID no pueden ser nulos o vacíos" });
+                }
+
+                var rowsAffected = await _unitOfWork.AdminRepository.DeleteDevice(deviceID, accountID);
+
+                if (rowsAffected == 0)
+                {
+                    return NotFound(new { message = "Dispositivo no encontrado" });
+                }
+
+                return Ok(new { message = "Dispositivo eliminado correctamente", deviceID, accountID });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error al eliminar el dispositivo", error = ex.Message });
+            }
+        }
+
         [HttpGet("GetDevicesConex")]
         public async Task<IActionResult> GetConexDesconex()
         {
