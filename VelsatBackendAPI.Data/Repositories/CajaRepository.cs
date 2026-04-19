@@ -239,14 +239,12 @@ namespace VelsatBackendAPI.Data.Repositories
                 string fecini = feciniUnix.ToString();
                 string fecreg = fecsysUnix.ToString();
 
-                // Obtener detalle de la ruta
                 var ruta = await GetDetalleRuta(despacho.Ruta?.Codigo, connection, transaction);
                 if (ruta == null)
                 {
                     return "Ruta no encontrada";
                 }
 
-                // Crear GPS
                 var gps = new Gps
                 {
                     Feciniruta = fecini,
@@ -257,13 +255,10 @@ namespace VelsatBackendAPI.Data.Repositories
                     Conductor = despacho.Conductor
                 };
 
-                // Actualizar registros anteriores del mismo deviceID para establecer isruta = 0
                 string updateSql = @"UPDATE urbano_asigna SET isruta = '0' WHERE deviceID = @DeviceID";
                 await connection.ExecuteAsync(updateSql, new { DeviceID = despacho.Carro?.Codunidad }, transaction);
 
-                // Insertar en urbano_asigna
-                string insertSql = @"INSERT INTO urbano_asigna (deviceID, codruta, fecprog, fechaini, codconductor, fecreg, boletos, isruta) 
-     VALUES (@DeviceID, @Codruta, @Fecprog, @Fechaini, @Codconductor, @Fecreg, @Boletos, @Isruta)";
+                string insertSql = @"INSERT INTO urbano_asigna (deviceID, codruta, fecprog, fechaini, codconductor, fecreg, boletos, isruta) VALUES (@DeviceID, @Codruta, @Fecprog, @Fechaini, @Codconductor, @Fecreg, @Boletos, @Isruta)";
                 var parametrosInsert = new
                 {
                     DeviceID = despacho.Carro?.Codunidad,
@@ -281,18 +276,14 @@ namespace VelsatBackendAPI.Data.Repositories
                     return "Error al guardar";
                 }
 
-                // Obtener el último despacho para esa ruta
                 var despachoInsertado = await ObtenerUltimoDespacho(ruta.Codigo, connection, transaction);
 
-                // Insertar en recor_control usando los datos del último despacho
                 if (despachoInsertado != null)
                 {
                     string insertControlSql = @"INSERT INTO recor_control (codasig, deviceID, codconductor, codruta, hora_registro, hora_inicio, fecha) 
-                              VALUES (@Codasig, @DeviceID, @Codconductor, @Codruta, @HoraRegistro, @HoraInicio, @Fecha)";
+                      VALUES (@Codasig, @DeviceID, @Codconductor, @Codruta, @HoraRegistro, @HoraInicio, @Fecha)";
 
                     var fechaActual = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss.fff");
-
-                    // Convertir timestamps a formato HH:mm
                     var timeZonePeru = TimeZoneInfo.FindSystemTimeZoneById("SA Pacific Standard Time");
                     var horaRegistro = TimeZoneInfo.ConvertTimeFromUtc(
                         DateTimeOffset.FromUnixTimeSeconds(long.Parse(despachoInsertado.Fecreg)).DateTime,
@@ -315,20 +306,20 @@ namespace VelsatBackendAPI.Data.Repositories
                     await connection.ExecuteAsync(insertControlSql, parametrosControl, transaction);
                 }
 
-                // Actualizar servicioactual del conductor
                 await connection.ExecuteAsync("UPDATE taxi SET servicioactual = @Ruta WHERE codtaxi = @Codtaxi",
                     new { Ruta = ruta.Codigo, Codtaxi = despacho.Conductor?.Codigo }, transaction);
 
-                // Actualizar datos del device
-                await connection.ExecuteAsync(@"UPDATE device SET origen = @Origen, destino = @Destino, rutaact = @Rutaact, ultimocontrol='0', codconductoract = @Codconductor, feciniruta = @Feciniruta WHERE deviceID = @Numequipo", new
-                {
-                    gps.Origen,
-                    gps.Destino,
-                    gps.Rutaact,
-                    Codconductor = gps.Conductor?.Codigo,
-                    Feciniruta = gps.Feciniruta,
-                    gps.Numequipo
-                }, transaction);
+                await connection.ExecuteAsync(
+                    @"UPDATE device SET origen = @Origen, destino = @Destino, rutaact = @Rutaact, ultimocontrol='0', codconductoract = @Codconductor, feciniruta = @Feciniruta WHERE deviceID = @Numequipo",
+                    new
+                    {
+                        gps.Origen,
+                        gps.Destino,
+                        gps.Rutaact,
+                        Codconductor = gps.Conductor?.Codigo,
+                        Feciniruta = gps.Feciniruta,
+                        gps.Numequipo
+                    }, transaction);
 
                 transaction.Commit();
                 return "Datos Guardados";
