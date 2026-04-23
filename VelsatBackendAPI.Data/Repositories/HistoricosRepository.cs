@@ -463,7 +463,7 @@ namespace VelsatBackendAPI.Data.Repositories
                 string account = connection.QueryFirstOrDefault<string>(sql, new { DeviceID = deviceID });
                 Console.WriteLine($"[DEBUG] Account obtenido: {account}");
 
-                const string sqlUser = "Select description from account where accountID = @AccountId";
+                const string sqlUser = "Select description from usuarios where accountID = @AccountId";
                 string userName = connection.QueryFirstOrDefault<string>(sqlUser, new { AccountId = account });
                 Console.WriteLine($"[DEBUG] UserName obtenido: {userName}");
 
