@@ -45,7 +45,7 @@ namespace VelsatBackendAPI.Controllers
         {
             var datos = await _unitOfWork.HistoricosRepository.GetDataReporting(fechaini, fechafin, deviceID, accountID);
 
-            var user = _unitOfWork.HistoricosRepository.UserName(deviceID);
+            var user = _unitOfWork.HistoricosRepository.UserName(deviceID) ?? "SIN USUARIO";
             var excelBytes = ConvertDataExcel(datos.ListaTablas, fechaini, fechafin, deviceID, user);
             string fileName = $"reporte_general_gps_{deviceID}.xlsx";
 

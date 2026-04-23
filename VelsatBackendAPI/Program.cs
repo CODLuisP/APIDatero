@@ -109,10 +109,10 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
+app.UseCors("AllowSpecificOrigin");
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseCors("AllowSpecificOrigin");
 app.UseSession();
 
 // Mapear todo de forma moderna
