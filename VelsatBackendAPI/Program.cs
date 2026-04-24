@@ -71,10 +71,10 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowSpecificOrigin", builder =>
     {
         builder
+               .AllowAnyOrigin()
                .AllowAnyMethod()
-               .AllowAnyHeader()
-               .AllowCredentials()
-               .SetIsOriginAllowed(origin => true);
+               .AllowAnyHeader();
+        // Elimina AllowCredentials() y SetIsOriginAllowed()
     });
 });
 
@@ -109,8 +109,10 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
-app.UseCors("AllowSpecificOrigin");
 app.UseRouting();
+
+app.UseCors("AllowSpecificOrigin");
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseSession();
