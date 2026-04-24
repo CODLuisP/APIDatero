@@ -19,6 +19,14 @@ namespace VelsatBackendAPI.Controllers
 
         }
 
+        private async Task<byte[]> DownloadImageAsync(string imageUrl)
+        {
+            using (var httpClient = new HttpClient())
+            {
+                return await httpClient.GetByteArrayAsync(imageUrl);
+            }
+        }
+
         [HttpGet("kilometer/{fechaini}/{fechafin}/{deviceID}/{accountID}")]
         public async Task<IActionResult> GetReportingKilometer(string fechaini, string fechafin, string deviceID, string accountID)
         {
@@ -32,14 +40,14 @@ namespace VelsatBackendAPI.Controllers
 
             var datos = await _unitOfWork.KilometrosRepository.GetKmReporting(fechaini, fechafin, deviceID, accountID);
 
-            var excelBytes = ConvertKilometerDataExcel(datos.ListaKilometros, fechaini, fechafin, deviceID);
+            var excelBytes = await ConvertKilometerDataExcel(datos.ListaKilometros, fechaini, fechafin, deviceID);
             string fileName = $"reporte_kilometros_gps.xlsx";
 
 
             return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
         }
 
-        private byte[] ConvertKilometerDataExcel(List<KilometrosRecorridos> datos, string fechaini, string fechafin, string deviceID)
+        private async Task<byte[]> ConvertKilometerDataExcel(List<KilometrosRecorridos> datos, string fechaini, string fechafin, string deviceID)
         {
             using (var workbook = new XLWorkbook())
             {
@@ -138,8 +146,12 @@ namespace VelsatBackendAPI.Controllers
                 worksheet.Cell("H9").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
                 worksheet.Cell("H9").Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
 
-                string imagePath = "C:\\inetpub\\wwwroot\\CarLogo.jpg";
-                var image = worksheet.AddPicture(imagePath).MoveTo(worksheet.Cell("B4")).WithSize(81, 81);
+                string imageUrl1 = "https://imagedelivery.net/o0E1jB_kGKnYacpYCBFmZA/e880b9a3-e8f9-4278-9d06-6c2f661b8800/public";
+                byte[] imageBytes1 = await DownloadImageAsync(imageUrl1);
+                using (var ms1 = new MemoryStream(imageBytes1))
+                {
+                    var image = worksheet.AddPicture(ms1).MoveTo(worksheet.Cell("B4")).WithSize(81, 81);
+                }
 
                 var mergedRange = worksheet.Range("H4:H7");
                 mergedRange.Merge();
@@ -148,8 +160,12 @@ namespace VelsatBackendAPI.Controllers
                 mergedRange.Merge().Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                 mergedRange.Merge().Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
 
-                string imagePath2 = "C:\\inetpub\\wwwroot\\VelsatLogo.png";
-                var image2 = worksheet.AddPicture(imagePath2).MoveTo(worksheet.Cell("H4")).WithSize(240, 80).MoveTo(800, 60);
+                string imageUrl2 = "https://imagedelivery.net/o0E1jB_kGKnYacpYCBFmZA/5fb05ad0-957b-4de1-ca5a-3eb24882fa00/public";
+                byte[] imageBytes2 = await DownloadImageAsync(imageUrl2);
+                using (var ms2 = new MemoryStream(imageBytes2))
+                {
+                    var image2 = worksheet.AddPicture(ms2).MoveTo(worksheet.Cell("I4"), new System.Drawing.Point(100, 0)).WithSize(240, 80);
+                }
 
                 worksheet.Row(12).Height = 40;
                 for (int i = 2; i <= 4; i++)
@@ -207,14 +223,14 @@ namespace VelsatBackendAPI.Controllers
 
             var datos = await _unitOfWork.KilometrosRepository.GetAllKmReporting(fechaini, fechafin, accountID);
 
-            var excelBytes = ConvertKilometerAllExcel(datos.ListaKilometros, fechaini, fechafin, accountID);
+            var excelBytes = await ConvertKilometerAllExcel(datos.ListaKilometros, fechaini, fechafin, accountID);
             string fileName = $"reporte_kilometros_gps.xlsx";
 
 
             return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
         }
 
-        private byte[] ConvertKilometerAllExcel(List<KilometrosRecorridos> listaKilometros, string fechaini, string fechafin, string accountID)
+        private async Task<byte[]> ConvertKilometerAllExcel(List<KilometrosRecorridos> listaKilometros, string fechaini, string fechafin, string accountID)
         {
             using (var workbook = new XLWorkbook())
             {
@@ -313,8 +329,12 @@ namespace VelsatBackendAPI.Controllers
                 worksheet.Cell("H9").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
                 worksheet.Cell("H9").Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
 
-                string imagePath = "C:\\inetpub\\wwwroot\\CarLogo.jpg";
-                var image = worksheet.AddPicture(imagePath).MoveTo(worksheet.Cell("B4")).WithSize(81, 81);
+                string imageUrl1 = "https://imagedelivery.net/o0E1jB_kGKnYacpYCBFmZA/e880b9a3-e8f9-4278-9d06-6c2f661b8800/public";
+                byte[] imageBytes1 = await DownloadImageAsync(imageUrl1);
+                using (var ms1 = new MemoryStream(imageBytes1))
+                {
+                    var image = worksheet.AddPicture(ms1).MoveTo(worksheet.Cell("B4")).WithSize(81, 81);
+                }
 
                 var mergedRange = worksheet.Range("H4:H7");
                 mergedRange.Merge();
@@ -323,8 +343,12 @@ namespace VelsatBackendAPI.Controllers
                 mergedRange.Merge().Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                 mergedRange.Merge().Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
 
-                string imagePath2 = "C:\\inetpub\\wwwroot\\VelsatLogo.png";
-                var image2 = worksheet.AddPicture(imagePath2).MoveTo(worksheet.Cell("H4")).WithSize(240, 80).MoveTo(800, 60);
+                string imageUrl2 = "https://imagedelivery.net/o0E1jB_kGKnYacpYCBFmZA/5fb05ad0-957b-4de1-ca5a-3eb24882fa00/public";
+                byte[] imageBytes2 = await DownloadImageAsync(imageUrl2);
+                using (var ms2 = new MemoryStream(imageBytes2))
+                {
+                    var image2 = worksheet.AddPicture(ms2).MoveTo(worksheet.Cell("I4"), new System.Drawing.Point(100, 0)).WithSize(240, 80);
+                }
 
                 worksheet.Row(12).Height = 40;
                 for (int i = 2; i <= 4; i++)

@@ -25,6 +25,14 @@ namespace VelsatBackendAPI.Controllers
             _unitOfWork = unitOfWork;
         }
 
+        private async Task<byte[]> DownloadImageAsync(string imageUrl)
+        {
+            using (var httpClient = new HttpClient())
+            {
+                return await httpClient.GetByteArrayAsync(imageUrl);
+            }
+        }
+
         //Reporte general y excel
         [HttpGet("general/{fechaini}/{fechafin}/{deviceID}/{accountID}")]
         public async Task<IActionResult> GetDataReporting(string fechaini, string fechafin, string deviceID, string accountID)
@@ -46,12 +54,12 @@ namespace VelsatBackendAPI.Controllers
             var datos = await _unitOfWork.HistoricosRepository.GetDataReporting(fechaini, fechafin, deviceID, accountID);
 
             var user = _unitOfWork.HistoricosRepository.UserName(deviceID) ?? "SIN USUARIO";
-            var excelBytes = ConvertDataExcel(datos.ListaTablas, fechaini, fechafin, deviceID, user);
+            var excelBytes = await ConvertDataExcel(datos.ListaTablas, fechaini, fechafin, deviceID, user);
             string fileName = $"reporte_general_gps_{deviceID}.xlsx";
             return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
         }
 
-        private byte[] ConvertDataExcel(List<TablasReporting> datos, string fechaini, string fechafin, string deviceID, string user)
+        private async Task<byte[]> ConvertDataExcel(List<TablasReporting> datos, string fechaini, string fechafin, string deviceID, string user)
         {
             using (var workbook = new XLWorkbook())
             {
@@ -146,8 +154,12 @@ namespace VelsatBackendAPI.Controllers
                 worksheet.Cell("I10").Style.Font.FontSize = 10;
                 worksheet.Cell("I10").Style.Font.SetBold();
 
-                string imagePath = "C:\\inetpub\\wwwroot\\CarLogo.jpg";
-                var image = worksheet.AddPicture(imagePath).MoveTo(worksheet.Cell("B4")).WithSize(81, 81);
+                string imageUrl1 = "https://imagedelivery.net/o0E1jB_kGKnYacpYCBFmZA/e880b9a3-e8f9-4278-9d06-6c2f661b8800/public";
+                byte[] imageBytes1 = await DownloadImageAsync(imageUrl1);
+                using (var ms1 = new MemoryStream(imageBytes1))
+                {
+                    var image = worksheet.AddPicture(ms1).MoveTo(worksheet.Cell("B4")).WithSize(81, 81);
+                }
 
 
                 var mergedRange = worksheet.Range("I4:I7");
@@ -157,8 +169,12 @@ namespace VelsatBackendAPI.Controllers
                 mergedRange.Merge().Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                 mergedRange.Merge().Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
 
-                string imagePath2 = "C:\\inetpub\\wwwroot\\VelsatLogo.png";
-                var image2 = worksheet.AddPicture(imagePath2).MoveTo(worksheet.Cell("I4"), new System.Drawing.Point(100, 0)).WithSize(240, 80);
+                string imageUrl2 = "https://imagedelivery.net/o0E1jB_kGKnYacpYCBFmZA/5fb05ad0-957b-4de1-ca5a-3eb24882fa00/public";
+                byte[] imageBytes2 = await DownloadImageAsync(imageUrl2);
+                using (var ms2 = new MemoryStream(imageBytes2))
+                {
+                    var image2 = worksheet.AddPicture(ms2).MoveTo(worksheet.Cell("I4"), new System.Drawing.Point(100, 0)).WithSize(240, 80);
+                }
 
 
                 worksheet.Row(12).Height = 40;
@@ -265,14 +281,14 @@ namespace VelsatBackendAPI.Controllers
             var datos = await _unitOfWork.HistoricosRepository.GetSpeedData(fechaini, fechafin, deviceId, speedKPH, accountID);
 
             var user = _unitOfWork.HistoricosRepository.UserName(deviceId);
-            var excelBytes = ConvertSpeedDataExcel(datos, fechaini, fechafin, deviceId, user);
+            var excelBytes = await ConvertSpeedDataExcel(datos, fechaini, fechafin, deviceId, user);
             string fileName = $"reporte_velocidad_gps_{deviceId}.xlsx";
 
 
             return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
         }
 
-        private byte[] ConvertSpeedDataExcel(List<SpeedReporting> speedData, string fechaini, string fechafin, string deviceId, string user)
+        private async Task<byte[]> ConvertSpeedDataExcel(List<SpeedReporting> speedData, string fechaini, string fechafin, string deviceId, string user)
         {
             using (var workbook = new XLWorkbook())
             {
@@ -380,8 +396,12 @@ namespace VelsatBackendAPI.Controllers
                 worksheet.Cell("J10").Style.Font.FontSize = 10;
                 worksheet.Cell("J10").Style.Font.SetBold();
 
-                string imagePath = "C:\\inetpub\\wwwroot\\CarLogo.jpg";
-                var image = worksheet.AddPicture(imagePath).MoveTo(worksheet.Cell("B4")).WithSize(81, 81);
+                string imageUrl1 = "https://imagedelivery.net/o0E1jB_kGKnYacpYCBFmZA/e880b9a3-e8f9-4278-9d06-6c2f661b8800/public";
+                byte[] imageBytes1 = await DownloadImageAsync(imageUrl1);
+                using (var ms1 = new MemoryStream(imageBytes1))
+                {
+                    var image = worksheet.AddPicture(ms1).MoveTo(worksheet.Cell("B4")).WithSize(81, 81);
+                }
 
 
                 var mergedRange = worksheet.Range("I4:J7");
@@ -391,8 +411,12 @@ namespace VelsatBackendAPI.Controllers
                 mergedRange.Merge().Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                 mergedRange.Merge().Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
 
-                string imagePath2 = "C:\\inetpub\\wwwroot\\VelsatLogo.png";
-                var image2 = worksheet.AddPicture(imagePath2).MoveTo(worksheet.Cell("I4")).WithSize(240, 80).MoveTo(815, 60);
+                string imageUrl2 = "https://imagedelivery.net/o0E1jB_kGKnYacpYCBFmZA/5fb05ad0-957b-4de1-ca5a-3eb24882fa00/public";
+                byte[] imageBytes2 = await DownloadImageAsync(imageUrl2);
+                using (var ms2 = new MemoryStream(imageBytes2))
+                {
+                    var image2 = worksheet.AddPicture(ms2).MoveTo(worksheet.Cell("I4"), new System.Drawing.Point(100, 0)).WithSize(240, 80);
+                }
 
                 worksheet.Row(12).Height = 40;
                 for (int i = 2; i <= 10; i++)
@@ -490,14 +514,14 @@ namespace VelsatBackendAPI.Controllers
             var datos = await _unitOfWork.HistoricosRepository.GetStopData(fechaini, fechafin, deviceID, accountID);
 
             var user = _unitOfWork.HistoricosRepository.UserName(deviceID);
-            var excelBytes = ConvertStopDataExcel(datos, fechaini, fechafin, deviceID, user);
+            var excelBytes = await ConvertStopDataExcel(datos, fechaini, fechafin, deviceID, user);
             string fileName = $"reporte_paradas_gps_{deviceID}.xlsx";
 
 
             return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
         }
 
-        private byte[] ConvertStopDataExcel(List<StopsReporting> stopsData, string fechaini, string fechafin, string deviceId, string user)
+        private async Task<byte[]> ConvertStopDataExcel(List<StopsReporting> stopsData, string fechaini, string fechafin, string deviceId, string user)
         {
 
             using (var workbook = new XLWorkbook())
@@ -605,8 +629,12 @@ namespace VelsatBackendAPI.Controllers
                 worksheet.Cell("J10").Style.Font.FontSize = 10;
                 worksheet.Cell("J10").Style.Font.SetBold();
 
-                string imagePath = "C:\\inetpub\\wwwroot\\CarLogo.jpg";
-                var image = worksheet.AddPicture(imagePath).MoveTo(worksheet.Cell("B4")).WithSize(81, 81);
+                string imageUrl1 = "https://imagedelivery.net/o0E1jB_kGKnYacpYCBFmZA/e880b9a3-e8f9-4278-9d06-6c2f661b8800/public";
+                byte[] imageBytes1 = await DownloadImageAsync(imageUrl1);
+                using (var ms1 = new MemoryStream(imageBytes1))
+                {
+                    var image = worksheet.AddPicture(ms1).MoveTo(worksheet.Cell("B4")).WithSize(81, 81);
+                }
 
 
                 var mergedRange = worksheet.Range("I4:J7");
@@ -616,8 +644,12 @@ namespace VelsatBackendAPI.Controllers
                 mergedRange.Merge().Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                 mergedRange.Merge().Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
 
-                string imagePath2 = "C:\\inetpub\\wwwroot\\VelsatLogo.png";
-                var image2 = worksheet.AddPicture(imagePath2).MoveTo(worksheet.Cell("I4")).WithSize(240, 80).MoveTo(960, 60);
+                string imageUrl2 = "https://imagedelivery.net/o0E1jB_kGKnYacpYCBFmZA/5fb05ad0-957b-4de1-ca5a-3eb24882fa00/public";
+                byte[] imageBytes2 = await DownloadImageAsync(imageUrl2);
+                using (var ms2 = new MemoryStream(imageBytes2))
+                {
+                    var image2 = worksheet.AddPicture(ms2).MoveTo(worksheet.Cell("I4"), new System.Drawing.Point(100, 0)).WithSize(240, 80);
+                }
 
                 worksheet.Row(12).Height = 40;
                 for (int i = 2; i <= 10; i++)
