@@ -84,9 +84,12 @@ builder.Services.AddSession(options =>
     options.IdleTimeout = TimeSpan.FromHours(1);
 });
 
+// DESPUÉS
 builder.Services.AddSignalR(o =>
 {
     o.EnableDetailedErrors = true;
+    o.ClientTimeoutInterval = TimeSpan.FromMinutes(2);
+    o.KeepAliveInterval = TimeSpan.FromSeconds(30);
 });
 
 //Descomentar para 107 - Envío de correos

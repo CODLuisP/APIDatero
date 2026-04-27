@@ -11,6 +11,9 @@ namespace VelsatBackendAPI.Hubs
         private static readonly ConcurrentDictionary<string, Timer> _placaTimers = new();
         private static readonly ConcurrentDictionary<string, int> _conexionesPorPlaca = new();
 
+        // Agregar este diccionario estático junto a los otros
+        private static readonly ConcurrentDictionary<string, string> _conexionPlaca = new();
+
         public UrbanoAsignaHub(IServiceScopeFactory scopeFactory, ILogger<UrbanoAsignaHub> logger)
         {
             _scopeFactory = scopeFactory;
@@ -40,6 +43,9 @@ namespace VelsatBackendAPI.Hubs
             {
                 IniciarTimerParaPlaca(placa);
             }
+
+            // Al final del método, registrar la relación
+            _conexionPlaca[Context.ConnectionId] = placa;
         }
 
         public async Task DejarGrupo(string placa)
@@ -49,6 +55,9 @@ namespace VelsatBackendAPI.Hubs
 
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, placa);
             _logger.LogInformation($"Cliente {Context.ConnectionId} dejó el grupo: {placa}");
+
+            // ✅ Limpiar el mapeo conexión → placa
+            _conexionPlaca.TryRemove(Context.ConnectionId, out _);
 
             // Decrementar contador de conexiones
             if (_conexionesPorPlaca.TryGetValue(placa, out var count))
@@ -142,16 +151,36 @@ namespace VelsatBackendAPI.Hubs
 
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
-            // Nota: En una implementación más robusta, deberías mantener un registro
-            // de qué cliente está en qué grupos para limpiar correctamente
-            // Por ahora, los timers se detendrán cuando no haya conexiones activas
-
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, "UrbanoGroup");
-            _logger.LogInformation($"Cliente desconectado: {Context.ConnectionId}");
 
-            if (exception != null)
+            // Limpiar la placa asociada a esta conexión
+            if (_conexionPlaca.TryRemove(Context.ConnectionId, out var placa))
+            {
+                if (_conexionesPorPlaca.TryGetValue(placa, out var count))
+                {
+                    if (count <= 1)
+                    {
+                        _conexionesPorPlaca.TryRemove(placa, out _);
+                        DetenerTimerParaPlaca(placa);
+                    }
+                    else
+                    {
+                        _conexionesPorPlaca.TryUpdate(placa, count - 1, count);
+                    }
+                }
+            }
+
+            if (exception is OperationCanceledException)
+            {
+                _logger.LogInformation("Cliente desconectado por timeout: {ConnectionId}", Context.ConnectionId);
+            }
+            else if (exception != null)
             {
                 _logger.LogError(exception, "Cliente desconectado con excepción");
+            }
+            else
+            {
+                _logger.LogInformation("Cliente desconectado: {ConnectionId}", Context.ConnectionId);
             }
 
             await base.OnDisconnectedAsync(exception);
