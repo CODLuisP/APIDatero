@@ -690,15 +690,15 @@ namespace VelsatBackendAPI.Data.Repositories
             }
         }
 
-        //CAMBIAR RUTAACT PARA etudvrb AL LLEGAR A WASHINTON
-        public async Task<bool> ActualizarRutaactFR(string placa)
+        //CAMBIAR RUTAACT PARA serfrymh AL LLEGAR A WASHINTON
+        public async Task<bool> ActualizarRutaactFR(string placa, string rutaact)
         {
-            string sql = @"UPDATE device SET rutaact = '70' WHERE deviceID = @DeviceID";
+            string sql = @"UPDATE device SET rutaact = @Rutaact WHERE deviceID = @DeviceID";
 
             try
             {
                 using var connection = CreateConnection();
-                var result = await connection.ExecuteAsync(sql, new { DeviceID = placa });
+                var result = await connection.ExecuteAsync(sql, new { DeviceID = placa, Rutaact = rutaact });
                 return result > 0;
             }
             catch (Exception ex)

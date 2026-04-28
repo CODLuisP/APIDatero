@@ -35,7 +35,7 @@ namespace VelsatBackendAPI.Data.Repositories
 
         Task<bool> ActualizarRutaactG(string placa); 
 
-        Task<bool> ActualizarRutaactFR(string placa);
+        Task<bool> ActualizarRutaactFR(string placa, string rutaact);
 
         //APIS PARA REGISTROS DE GPS VEHICULAR
         Task<IEnumerable<DeviceDespachadas>> DevicesDespacho(string fecha, string ruta);

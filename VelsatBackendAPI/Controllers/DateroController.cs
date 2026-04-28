@@ -351,8 +351,8 @@ namespace VelsatBackendAPI.Controllers
             }
         }
 
-        [HttpPut("ActualizarRutaactFR/{placa}")]
-        public async Task<IActionResult> ActualizarRutaactFR(string placa)
+        [HttpPut("ActualizarRutaactFR/{placa}/{rutaact}")]
+        public async Task<IActionResult> ActualizarRutaactFR(string placa, string rutaact)
         {
             try
             {
@@ -365,7 +365,7 @@ namespace VelsatBackendAPI.Controllers
                     });
                 }
 
-                var resultado = await _unitOfWork.DateroRepository.ActualizarRutaactFR(placa);
+                var resultado = await _unitOfWork.DateroRepository.ActualizarRutaactFR(placa, rutaact);
 
                 if (!resultado)
                 {
