@@ -104,7 +104,7 @@ namespace VelsatBackendAPI.Data.Repositories
                 using var connection = CreateConnection();
                 Console.WriteLine("[DEBUG] Conexión creada para ValidarUser");
 
-                const string sql = "Select accountID, password from usuarios where accountID = @login and password = @clave";
+                const string sql = "Select accountID, password, description, emailTraccar, passTraccar from usuarios where accountID = @login and password = @clave";
                 var result = await connection.QueryFirstOrDefaultAsync<Account>(sql, new { login = login, clave = clave });
 
                 if (result != null)

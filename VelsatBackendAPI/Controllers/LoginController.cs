@@ -44,7 +44,14 @@ namespace VelsatBackendAPI.Controllers
                 // ← ELIMINAR: await _hubContext.Clients.Group(request.Login).SendAsync("UnirGrupo", request.Login);
                 // ← ELIMINAR: IniciarTemporizadorDatosEnTiempoReal(request.Login);
 
-                return StatusCode(StatusCodes.Status200OK, new { Token = token, Username = request.Login });
+                return StatusCode(StatusCodes.Status200OK, new
+                {
+                    Token = token,
+                    Username = request.Login,
+                    EmailTraccar = account.EmailTraccar,
+                    PassTraccar = account.PassTraccar
+                });
+
             }
 
             return StatusCode(StatusCodes.Status401Unauthorized);

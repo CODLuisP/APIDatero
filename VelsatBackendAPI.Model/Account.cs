@@ -11,5 +11,7 @@ namespace VelsatBackendAPI.Model
         public string AccountID { get; set; }
         public string Password { get; set; }
         public string Description { get; set; }
+        public string EmailTraccar { get; set; }
+        public string PassTraccar { get; set; }
     }
 }
