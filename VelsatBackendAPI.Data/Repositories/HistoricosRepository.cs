@@ -21,7 +21,6 @@ namespace VelsatBackendAPI.Data.Repositories
         public HistoricosRepository(IDbConnectionFactory connectionFactory)
         {
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-            Console.WriteLine("[DEBUG] HistoricosRepository inicializado con IDbConnectionFactory");
         }
 
         private IDbConnection CreateDefaultConnection() => _connectionFactory.GetDefaultConnection();
@@ -142,15 +141,12 @@ namespace VelsatBackendAPI.Data.Repositories
 
         public int DateUnix(string fecha)
         {
-            Console.WriteLine($"[DEBUG] Convirtiendo fecha a Unix: {fecha}");
-
             try
             {
                 fecha = WebUtility.UrlDecode(fecha);
                 DateTime fechaTime = DateTime.ParseExact(fecha, "dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture);
                 int unixFecha = (int)(fechaTime.ToUniversalTime() - new DateTime(1970, 1, 1)).TotalSeconds;
 
-                Console.WriteLine($"[DEBUG] Fecha convertida exitosamente: {unixFecha}");
                 return unixFecha;
             }
             catch (Exception ex)
@@ -169,8 +165,6 @@ namespace VelsatBackendAPI.Data.Repositories
 
         public ResultadosCalculoDias CalcularDias(string fechaI, string fechaF)
         {
-            Console.WriteLine($"[DEBUG] Calculando días entre {fechaI} y {fechaF}");
-
             try
             {
                 int fechainiUnix = DateUnix(fechaI);
@@ -178,8 +172,6 @@ namespace VelsatBackendAPI.Data.Repositories
 
                 int totalsegundos = fechafinUnix - fechainiUnix;
                 double numdias = (double)totalsegundos / 86400;
-
-                Console.WriteLine($"[DEBUG] Cálculo completado: {numdias} días");
 
                 return new ResultadosCalculoDias
                 {
@@ -197,8 +189,6 @@ namespace VelsatBackendAPI.Data.Repositories
 
         public async Task<List<SpeedReporting>> GetSpeedData(string fechaini, string fechafin, string deviceID, double speedKPH, string accountID)
         {
-            Console.WriteLine($"[DEBUG] Iniciando GetSpeedData para deviceID: {deviceID}, speedKPH: {speedKPH}");
-
             try
             {
                 var datosreporte = await GetDataReporting(fechaini, fechafin, deviceID, accountID);
@@ -225,8 +215,6 @@ namespace VelsatBackendAPI.Data.Repositories
                         }
                     }
                 }
-
-                Console.WriteLine($"[DEBUG] GetSpeedData completado: {SpeedData.Count} registros encontrados");
                 return SpeedData;
             }
             catch (Exception ex)
@@ -238,8 +226,6 @@ namespace VelsatBackendAPI.Data.Repositories
 
         public async Task<List<StopsReporting>> GetStopData(string fechaini, string fechafin, string deviceID, string accountID)
         {
-            Console.WriteLine($"[DEBUG] Iniciando GetStopData para deviceID: {deviceID}");
-
             try
             {
                 var datosreporte = await GetDataReporting(fechaini, fechafin, deviceID, accountID);
@@ -326,7 +312,6 @@ namespace VelsatBackendAPI.Data.Repositories
                     }
                 }
 
-                Console.WriteLine($"[DEBUG] GetStopData completado: {StopsData.Count} paradas encontradas");
                 return StopsData;
             }
             catch (Exception ex)
@@ -344,8 +329,6 @@ namespace VelsatBackendAPI.Data.Repositories
 
         public ResultDate FormatDate(string dateS, string dateE)
         {
-            Console.WriteLine($"[DEBUG] Formateando fechas: {dateS} - {dateE}");
-
             try
             {
                 DateTime.TryParse(dateS, out DateTime fechaInicio);
@@ -353,8 +336,6 @@ namespace VelsatBackendAPI.Data.Repositories
 
                 string fechaInicioString = fechaInicio.ToString("dd/MM/yyyy HH:mm");
                 string fechaFinString = fechaFin.ToString("dd/MM/yyyy HH:mm");
-
-                Console.WriteLine($"[DEBUG] Fechas formateadas: {fechaInicioString} - {fechaFinString}");
 
                 return new ResultDate
                 {
@@ -371,8 +352,6 @@ namespace VelsatBackendAPI.Data.Repositories
 
         public async Task<List<RouteDetails>> GetRouteDetails(string fechaini, string fechafin, string deviceID, string accountID)
         {
-            Console.WriteLine($"[DEBUG] Iniciando GetRouteDetails para deviceID: {deviceID}");
-
             try
             {
                 var datareport = await GetDataReporting(fechaini, fechafin, deviceID, accountID);
@@ -429,7 +408,6 @@ namespace VelsatBackendAPI.Data.Repositories
                     }
                 }
 
-                Console.WriteLine($"[DEBUG] GetRouteDetails completado: {DetailsData.Count} detalles de ruta");
                 return DetailsData;
             }
             catch (Exception ex)
@@ -453,19 +431,15 @@ namespace VelsatBackendAPI.Data.Repositories
 
         public string UserName(string deviceID)
         {
-            Console.WriteLine($"[DEBUG] Obteniendo UserName para deviceID: {deviceID}");
-
             try
             {
                 using var connection = CreateDefaultConnection();
 
                 const string sql = "select accountID from gestion_villa.device where deviceID = @DeviceID";
                 string account = connection.QueryFirstOrDefault<string>(sql, new { DeviceID = deviceID });
-                Console.WriteLine($"[DEBUG] Account obtenido: {account}");
 
                 const string sqlUser = "Select description from gestion_villa.usuarios where accountID = @AccountId";
                 string userName = connection.QueryFirstOrDefault<string>(sqlUser, new { AccountId = account });
-                Console.WriteLine($"[DEBUG] UserName obtenido: {userName}");
 
                 return userName;
             }

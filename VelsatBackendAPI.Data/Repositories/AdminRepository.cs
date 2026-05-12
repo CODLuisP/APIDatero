@@ -11,7 +11,6 @@ namespace VelsatBackendAPI.Data.Repositories
         public AdminRepository(IDbConnectionFactory connectionFactory)
         {
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-            Console.WriteLine("[DEBUG] AdminRepository inicializado con IDbConnectionFactory");
         }
 
         private IDbConnection CreateConnection() => _connectionFactory.CreateConnection();

@@ -23,11 +23,6 @@ namespace VelsatBackendAPI.Data.Repositories
             _gtsConnectionString = configuration.GetConnectionString("GtsConnection")
                 ?? throw new ArgumentNullException("Connection string 'GtsConnection' not found.");
 
-            Console.WriteLine("[DEBUG] DbConnectionFactory inicializado");
-            Console.WriteLine($"[DEBUG] DefaultConnection configurado: {!string.IsNullOrEmpty(_defaultConnectionString)}");
-            Console.WriteLine($"[DEBUG] SecondConnection configurado: {!string.IsNullOrEmpty(_secondConnectionString)}");
-            Console.WriteLine($"[DEBUG] GtsConnection configurado: {!string.IsNullOrEmpty(_gtsConnectionString)}");
-
         }
 
         public IDbConnection CreateConnection()
@@ -35,7 +30,6 @@ namespace VelsatBackendAPI.Data.Repositories
             try
             {
                 var connection = new MySqlConnection(_defaultConnectionString);
-                Console.WriteLine("[DEBUG] CreateConnection() - Conexión default creada exitosamente");
                 return connection;
             }
             catch (Exception ex)
@@ -50,7 +44,6 @@ namespace VelsatBackendAPI.Data.Repositories
             try
             {
                 var connection = new MySqlConnection(_defaultConnectionString);
-                Console.WriteLine("[DEBUG] GetDefaultConnection() - Conexión default creada exitosamente");
                 return connection;
             }
             catch (Exception ex)
@@ -65,7 +58,6 @@ namespace VelsatBackendAPI.Data.Repositories
             try
             {
                 var connection = new MySqlConnection(_secondConnectionString);
-                Console.WriteLine("[DEBUG] GetSecondConnection() - Conexión second creada exitosamente");
                 return connection;
             }
             catch (Exception ex)
@@ -80,7 +72,6 @@ namespace VelsatBackendAPI.Data.Repositories
             try
             {
                 var connection = new MySqlConnection(_gtsConnectionString);
-                Console.WriteLine("[DEBUG] GetGtsConnection() - Conexión GTS creada exitosamente");
                 return connection;
             }
             catch (Exception ex)
