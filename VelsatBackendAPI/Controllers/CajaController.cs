@@ -377,69 +377,76 @@ namespace VelsatBackendAPI.Controllers
         }
 
 
-        //DESPACHO RUTA 1148
+        //DESPACHO RUTA 1148-1149
         [HttpPost("asignarFR")]
         public async Task<IActionResult> AsignarDespachoFR([FromBody] DespachoVilla despacho)
         {
-            if (despacho == null || despacho.Carro == null || despacho.Ruta == null || despacho.Conductor == null)
-            {
+            if (despacho?.Carro == null || despacho?.Ruta == null || despacho?.Conductor == null)
                 return BadRequest("Datos incompletos.");
-            }
 
             var resultado = await _unitOfWork.CajaRepository.AsignarDespacho(despacho);
 
             if (resultado == "Datos Guardados")
             {
-                // Consultar el Codasig recién insertado y la hora de inicio
                 var datosRecientes = await _unitOfWork.UrbanoAsignaService.GetUrbanoAsigna(despacho.Carro.Codunidad);
-
-                // Obtener el Codasig del último despacho
                 var codasig = await _unitOfWork.CajaRepository.ObtenerUltimoCodasig(despacho.Carro.Codunidad);
 
-                // Notificar a la app de consola
-                _ = NotificarAppConsolaFR(despacho.Carro.Codunidad, datosRecientes?.Fechaini, codasig);
+                string codruta = datosRecientes?.Codruta ?? "69"; // ✅ default 69 si no viene
+
+                Console.WriteLine($"🔍 Datos a enviar:");
+                Console.WriteLine($"   Placa:    {despacho.Carro.Codunidad}");
+                Console.WriteLine($"   FechaIni: {datosRecientes?.Fechaini}");
+                Console.WriteLine($"   Codasig:  {codasig}");
+                Console.WriteLine($"   Codruta:  {codruta}");
+
+                _ = NotificarAppConsolaFR(
+                    despacho.Carro.Codunidad,
+                    datosRecientes?.Fechaini,
+                    codasig,
+                    codruta
+                );
 
                 return Ok(new { mensaje = resultado });
             }
-            else
-            {
-                return StatusCode(500, new { mensaje = resultado });
-            }
+
+            return StatusCode(500, new { mensaje = resultado });
         }
 
-        private async Task NotificarAppConsolaFR(string placa, string fechaIni, string codasig)
+        private async Task NotificarAppConsolaFR(string placa, string fechaIni, string codasig, string codruta)
         {
             try
             {
-                using (var client = new HttpClient())
+                using var client = new HttpClient();
+                client.Timeout = TimeSpan.FromSeconds(5);
+
+                var payload = new
                 {
-                    client.Timeout = TimeSpan.FromSeconds(5);
+                    placa = placa,
+                    usuario = codruta == "71" ? "serfrymh49" : "serfrymh48", // ✅ cuenta según codruta
+                    fechaIni = fechaIni,
+                    codasig = codasig,
+                    codruta = codruta
+                };
 
-                    var payload = new
-                    {
-                        placa = placa,
-                        usuario = "serfrymh",
-                        fechaIni = fechaIni,
-                        codasig = codasig  // ← AGREGAR CODASIG
-                    };
+                var json = System.Text.Json.JsonSerializer.Serialize(payload);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                    var json = System.Text.Json.JsonSerializer.Serialize(payload);
-                    var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var response = await client.PostAsync(
+                    "http://66.240.210.125:5004/api/iniciar-monitoreo", content);
 
-                    var response = await client.PostAsync(
-                        "http://66.240.210.125:5004/api/iniciar-monitoreo",
-                        content
-                    );
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        Console.WriteLine($"✓ App de consola notificada para placa {placa}");
-                    }
+                if (response.IsSuccessStatusCode)
+                {
+                    string tipoRuta = codruta == "71" ? "serfrymh49" : "serfrymh48";
+                    Console.WriteLine($"✓ App de consola notificada para placa {placa} - Cuenta: {tipoRuta} ({codruta})");
+                }
+                else
+                {
+                    Console.WriteLine($"⚠️ Error al notificar appFR: {response.StatusCode}");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"⚠️ Error notificando app de consola: {ex.Message}");
+                Console.WriteLine($"⚠️ Error notificando app de consola FR: {ex.Message}");
             }
         }
 
