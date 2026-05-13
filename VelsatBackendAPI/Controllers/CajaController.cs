@@ -392,7 +392,7 @@ namespace VelsatBackendAPI.Controllers
                 var codasig = await _unitOfWork.CajaRepository.ObtenerUltimoCodasig(despacho.Carro.Codunidad);
 
                 // ✅ Obtener codruta desde los datos recientes
-                string codruta = datosRecientes?.Codruta ?? "69";
+                string codruta = despacho.Ruta.Codigo ?? "69";
 
                 _ = NotificarAppConsolaFR(despacho.Carro.Codunidad, datosRecientes?.Fechaini, codasig, codruta);
 
