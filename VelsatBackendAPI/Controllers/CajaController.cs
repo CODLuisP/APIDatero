@@ -377,11 +377,11 @@ namespace VelsatBackendAPI.Controllers
         }
 
 
-        //DESPACHO RUTA 1148-1149
+        //DESPACHO RUTA 1148
         [HttpPost("asignarFR")]
         public async Task<IActionResult> AsignarDespachoFR([FromBody] DespachoVilla despacho)
         {
-            if (despacho?.Carro == null || despacho?.Ruta == null || despacho?.Conductor == null)
+            if (despacho == null || despacho.Carro == null || despacho.Ruta == null || despacho.Conductor == null)
                 return BadRequest("Datos incompletos.");
 
             var resultado = await _unitOfWork.CajaRepository.AsignarDespacho(despacho);
@@ -391,20 +391,10 @@ namespace VelsatBackendAPI.Controllers
                 var datosRecientes = await _unitOfWork.UrbanoAsignaService.GetUrbanoAsigna(despacho.Carro.Codunidad);
                 var codasig = await _unitOfWork.CajaRepository.ObtenerUltimoCodasig(despacho.Carro.Codunidad);
 
-                string codruta = datosRecientes?.Codruta ?? "69"; // ✅ default 69 si no viene
+                // ✅ Obtener codruta desde los datos recientes
+                string codruta = datosRecientes?.Codruta ?? "69";
 
-                Console.WriteLine($"🔍 Datos a enviar:");
-                Console.WriteLine($"   Placa:    {despacho.Carro.Codunidad}");
-                Console.WriteLine($"   FechaIni: {datosRecientes?.Fechaini}");
-                Console.WriteLine($"   Codasig:  {codasig}");
-                Console.WriteLine($"   Codruta:  {codruta}");
-
-                _ = NotificarAppConsolaFR(
-                    despacho.Carro.Codunidad,
-                    datosRecientes?.Fechaini,
-                    codasig,
-                    codruta
-                );
+                _ = NotificarAppConsolaFR(despacho.Carro.Codunidad, datosRecientes?.Fechaini, codasig, codruta);
 
                 return Ok(new { mensaje = resultado });
             }
@@ -422,7 +412,7 @@ namespace VelsatBackendAPI.Controllers
                 var payload = new
                 {
                     placa = placa,
-                    usuario = codruta == "71" ? "serfrymh49" : "serfrymh48", // ✅ cuenta según codruta
+                    usuario = "serfrymh",
                     fechaIni = fechaIni,
                     codasig = codasig,
                     codruta = codruta
@@ -435,18 +425,13 @@ namespace VelsatBackendAPI.Controllers
                     "http://66.240.210.125:5004/api/iniciar-monitoreo", content);
 
                 if (response.IsSuccessStatusCode)
-                {
-                    string tipoRuta = codruta == "71" ? "serfrymh49" : "serfrymh48";
-                    Console.WriteLine($"✓ App de consola notificada para placa {placa} - Cuenta: {tipoRuta} ({codruta})");
-                }
+                    Console.WriteLine($"✓ App de consola notificada para placa {placa} (codruta: {codruta})");
                 else
-                {
                     Console.WriteLine($"⚠️ Error al notificar appFR: {response.StatusCode}");
-                }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"⚠️ Error notificando app de consola FR: {ex.Message}");
+                Console.WriteLine($"Error notificando app de consola FR: {ex.Message}");
             }
         }
 
