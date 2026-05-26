@@ -102,26 +102,39 @@ namespace VelsatBackendAPI.Data.Repositories
 
         public async Task<List<Carro>> ListUnidDisp(string usuario)
         {
-            var especiales = new[] { "lmmaldonado", "jbohorquezc", "jguevarar", "plangev", "emaylleg" };
-            var codigo = especiales.Contains(usuario) ? "realstar" : usuario;
-
-            string sql = @"SELECT deviceID, codconductoract, rutadefault FROM device WHERE rutaact = '0' AND accountID = @Usuario";
+            string sql = @"
+                SELECT 
+                    d.deviceID,
+                    d.rutadefault,
+                    t.codtaxi,
+                    t.nombres,
+                    t.apellidos,
+                    t.sexo,
+                    t.dni,
+                    t.telefono
+                FROM device d
+                LEFT JOIN taxi t 
+                    ON CAST(d.codconductoract AS UNSIGNED) = t.codtaxi
+                    AND t.estado = 'A'
+                WHERE d.rutaact = '0' 
+                  AND d.accountID = @Usuario";
 
             using var connection = CreateConnection();
-            var unidadesRaw = await connection.QueryAsync(sql, new { Usuario = codigo });
+            var rows = await connection.QueryAsync(sql, new { Usuario = usuario });
 
-            var unidades = new List<Carro>();
-
-            foreach (var row in unidadesRaw)
+            var unidades = rows.Select(row => new Carro
             {
-                var unidad = new Carro
+                Codunidad = row.deviceID,
+                Conductor = row.codtaxi != null ? new Usuario
                 {
-                    Codunidad = row.deviceID,
-                    Conductor = !string.IsNullOrWhiteSpace((string?)row.codconductoract) ? await GetDetalleConductor(row.codconductoract) : null
-                };
-
-                unidades.Add(unidad);
-            }
+                    Codigo = row.codtaxi.ToString(),
+                    Nombre = row.nombres,
+                    Apepate = row.apellidos,
+                    Sexo = row.sexo,
+                    Dni = row.dni,
+                    Telefono = row.telefono,
+                } : null
+            }).ToList();
 
             return unidades;
         }

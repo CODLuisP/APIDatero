@@ -17,7 +17,6 @@ namespace VelsatBackendAPI.Data.Services
         public UrbanoAsignaService(IDbConnectionFactory connectionFactory)
         {
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-            Console.WriteLine("[DEBUG] UrbanoAsignaService inicializado con IDbConnectionFactory");
         }
 
         public async Task<RecentUrbano> GetUrbanoAsigna(string placa)
