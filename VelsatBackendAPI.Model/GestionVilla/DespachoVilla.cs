@@ -29,6 +29,7 @@ namespace VelsatBackendAPI.Model.GestionVilla
 
         public string? Boletos { get; set; }
         public string? Fecreg { get; set; }
+        public bool? DespachoDesdeLima { get; set; }
 
     }
 }

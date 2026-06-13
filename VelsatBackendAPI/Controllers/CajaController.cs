@@ -394,7 +394,7 @@ namespace VelsatBackendAPI.Controllers
                 // ✅ Obtener codruta desde los datos recientes
                 string codruta = despacho.Ruta.Codigo ?? "69";
 
-                _ = NotificarAppConsolaFR(despacho.Carro.Codunidad, datosRecientes?.Fechaini, codasig, codruta);
+                _ = NotificarAppConsolaFR(despacho.Carro.Codunidad, datosRecientes?.Fechaini, codasig, codruta, despacho.DespachoDesdeLima ?? false);
 
                 return Ok(new { mensaje = resultado });
             }
@@ -402,7 +402,7 @@ namespace VelsatBackendAPI.Controllers
             return StatusCode(500, new { mensaje = resultado });
         }
 
-        private async Task NotificarAppConsolaFR(string placa, string fechaIni, string codasig, string codruta)
+        private async Task NotificarAppConsolaFR(string placa, string fechaIni, string codasig, string codruta, bool despachoDesdeLima = true)
         {
             try
             {
@@ -415,7 +415,8 @@ namespace VelsatBackendAPI.Controllers
                     usuario = "serfrymh",
                     fechaIni = fechaIni,
                     codasig = codasig,
-                    codruta = codruta
+                    codruta = codruta,
+                    despachoDesdeLima = despachoDesdeLima
                 };
 
                 var json = System.Text.Json.JsonSerializer.Serialize(payload);
