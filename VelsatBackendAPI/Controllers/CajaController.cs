@@ -402,7 +402,7 @@ namespace VelsatBackendAPI.Controllers
             return StatusCode(500, new { mensaje = resultado });
         }
 
-        private async Task NotificarAppConsolaFR(string placa, string fechaIni, string codasig, string codruta, bool despachoDesdeLima = true)
+        private async Task NotificarAppConsolaFR(string placa, string fechaIni, string codasig, string codruta, bool despachoDesdeLima = false)
         {
             try
             {
