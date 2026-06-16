@@ -203,7 +203,7 @@ namespace VelsatBackendAPI.Data.Services
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"[WARN] Error convirtiendo timestamp {vehiculo.lastGPSTimestamp}: {ex.Message}");
+                        Console.WriteLine($"[ERROR] Error convirtiendo timestamp {vehiculo.lastGPSTimestamp}: {ex.Message}");
                         fechaGPS = null;
                     }
                 }

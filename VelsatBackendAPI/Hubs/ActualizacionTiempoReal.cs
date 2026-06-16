@@ -32,8 +32,6 @@ namespace VelsatBackendAPI.Hubs
                 await Groups.AddToGroupAsync(Context.ConnectionId, username);
                 IniciarTimer(username);
                 await Clients.Caller.SendAsync("ConectadoExitosamente", username);
-
-                Console.WriteLine($"[DEBUG] Usuario {username} se unió al grupo desde la ruta");
             }
             catch (Exception ex)
             {
@@ -53,8 +51,6 @@ namespace VelsatBackendAPI.Hubs
             {
                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, username);
                 DetenerTimer(username);
-
-                Console.WriteLine($"[DEBUG] Usuario {username} dejó el grupo");
             }
             catch (Exception ex)
             {
@@ -65,7 +61,6 @@ namespace VelsatBackendAPI.Hubs
         public override async Task OnConnectedAsync()
         {
             var username = GetUsernameFromRoute();
-            Console.WriteLine($"[DEBUG] Cliente conectado: {Context.ConnectionId}, Username: {username}");
 
             if (!string.IsNullOrEmpty(username))
             {
@@ -82,7 +77,6 @@ namespace VelsatBackendAPI.Hubs
             if (!string.IsNullOrEmpty(username))
             {
                 DetenerTimer(username);
-                Console.WriteLine($"[DEBUG] Usuario {username} desconectado, timer detenido");
             }
 
             await base.OnDisconnectedAsync(exception);
@@ -131,8 +125,6 @@ namespace VelsatBackendAPI.Hubs
 
                 _userTimers[username] = timer;
             }
-
-            Console.WriteLine($"[DEBUG] Timer iniciado para: {username}");
         }
 
         private void DetenerTimer(string username)
@@ -146,7 +138,6 @@ namespace VelsatBackendAPI.Hubs
                 {
                     _userTimers[username].Dispose();
                     _userTimers.Remove(username);
-                    Console.WriteLine($"[DEBUG] Timer detenido para: {username}");
                 }
             }
         }
@@ -156,18 +147,12 @@ namespace VelsatBackendAPI.Hubs
         {
             try
             {
-                Console.WriteLine($"[DEBUG] Obteniendo datos para: {username}");
-
                 // Usar directamente las dependencias inyectadas en el constructor
                 var datosCargaActualizados = await _unitOfWork.DatosCargainicialService.ObtenerDatosCargaInicialAsync(username);
                 datosCargaActualizados.FechaActual = DateTime.Now;
 
-                Console.WriteLine($"[DEBUG] Datos obtenidos para {username}: {datosCargaActualizados.DatosDevice?.Count ?? 0} dispositivos");
-
                 // Enviar datos usando el HubContext inyectado
                 await _hubContext.Clients.Group(username).SendAsync("ActualizarDatos", datosCargaActualizados);
-
-                Console.WriteLine($"[DEBUG] Datos enviados exitosamente para: {username}");
             }
             catch (Exception ex)
             {
@@ -176,7 +161,6 @@ namespace VelsatBackendAPI.Hubs
                 // Si hay error, detener el timer para evitar spam de errores
                 if (ex.Message.Contains("disposed") || ex.Message.Contains("ObjectDisposed"))
                 {
-                    Console.WriteLine($"[WARNING] Deteniendo timer para {username} debido a disposed objects");
                     DetenerTimer(username);
                 }
             }

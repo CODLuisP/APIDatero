@@ -212,16 +212,11 @@ namespace VelsatBackendAPI.Controllers
                         "http://66.240.210.125:5003/api/iniciar-monitoreo",
                         content
                     );
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        Console.WriteLine($"✓ App de consola notificada para placa {placa}");
-                    }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"⚠️ Error notificando app de consola: {ex.Message}");
+                Console.WriteLine($"Error notificando app de consola: {ex.Message}");
             }
         }
 
@@ -279,20 +274,11 @@ namespace VelsatBackendAPI.Controllers
                         "http://66.240.210.125:5001/api/iniciar-monitoreo",
                         content
                     );
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        Console.WriteLine($"✓ App de consola (etudvrg) notificada para placa {placa}");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"⚠️ Error al notificar etudvrg: {response.StatusCode}");
-                    }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"⚠️ Error notificando app de consola etudvrg: {ex.Message}");
+                Console.WriteLine($"Error notificando app de consola etudvrg: {ex.Message}");
             }
         }
 
@@ -313,13 +299,6 @@ namespace VelsatBackendAPI.Controllers
                 var codasig = await _unitOfWork.CajaRepository.ObtenerUltimoCodasig(despacho.Carro.Codunidad);
 
                 string codigoRuta = datosRecientes?.Codruta ?? "11";
-
-                // ✅ Log para verificar
-                Console.WriteLine($"🔍 Datos a enviar:");
-                Console.WriteLine($"   Placa: {despacho.Carro.Codunidad}");
-                Console.WriteLine($"   FechaIni: {datosRecientes?.Fechaini}");
-                Console.WriteLine($"   Codasig: {codasig}");
-                Console.WriteLine($"   CodigoRuta: {codigoRuta}");
 
                 _ = NotificarAppConsola22(
                     despacho.Carro.Codunidad,
@@ -359,20 +338,15 @@ namespace VelsatBackendAPI.Controllers
                         content
                     );
 
-                    if (response.IsSuccessStatusCode)
+                    if (!response.IsSuccessStatusCode)
                     {
-                        string tipoRuta = codigoRuta == "11" ? "IDA" : "REGRESO";
-                        Console.WriteLine($"✓ App de consola (etudv22) notificada para placa {placa} - Tipo: {tipoRuta} ({codigoRuta})");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"⚠️ Error al notificar etudv22: {response.StatusCode}");
+                        Console.WriteLine($"Error al notificar etudv22: {response.StatusCode}");
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"⚠️ Error notificando app de consola etudv22: {ex.Message}");
+                Console.WriteLine($"Error notificando app de consola etudv22: {ex.Message}");
             }
         }
 
@@ -425,10 +399,6 @@ namespace VelsatBackendAPI.Controllers
                 var response = await client.PostAsync(
                     "http://66.240.210.125:5004/api/iniciar-monitoreo", content);
 
-                if (response.IsSuccessStatusCode)
-                    Console.WriteLine($"✓ App de consola notificada para placa {placa} (codruta: {codruta})");
-                else
-                    Console.WriteLine($"⚠️ Error al notificar appFR: {response.StatusCode}");
             }
             catch (Exception ex)
             {
