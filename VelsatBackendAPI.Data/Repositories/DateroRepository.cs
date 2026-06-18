@@ -658,7 +658,7 @@ namespace VelsatBackendAPI.Data.Repositories
         //CAMBIAR RUTAACT PARA etudvrb AL LLEGAR A PARADERO 15
         public async Task<bool> ActualizarRutaact(string placa)
         {
-            string sql = @"UPDATE device SET rutaact = '26' WHERE deviceID = @DeviceID";
+            string sql = @"UPDATE device SET rutaact = '26', feciniruta = UNIX_TIMESTAMP() WHERE deviceID = @DeviceID";
 
             try
             {
@@ -675,7 +675,7 @@ namespace VelsatBackendAPI.Data.Repositories
         //CAMBIAR RUTAACT PARA etudvrg AL LLEGAR A TUPAC
         public async Task<bool> ActualizarRutaactG(string placa)
         {
-            string sql = @"UPDATE device SET rutaact = '68' WHERE deviceID = @DeviceID";
+            string sql = @"UPDATE device SET rutaact = '68', feciniruta = UNIX_TIMESTAMP() WHERE deviceID = @DeviceID";
 
             try
             {
