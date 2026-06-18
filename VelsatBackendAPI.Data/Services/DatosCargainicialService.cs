@@ -71,7 +71,8 @@ namespace VelsatBackendAPI.Data.Services
             }
             catch (Exception ex)
             {
-                throw;
+                Console.WriteLine($"[ERROR] Error obteniendo deviceIds para {login}: {ex.Message}");
+                return new List<string>();
             }
         }
 
@@ -128,7 +129,12 @@ namespace VelsatBackendAPI.Data.Services
             }
             catch (Exception ex)
             {
-                throw;
+                Console.WriteLine($"[ERROR] Error obteniendo datos carga inicial para {login}: {ex.Message}");
+                return new DatosCargainicial
+                {
+                    FechaActual = DateTime.Now,
+                    DatosDevice = new List<Device>()
+                };
             }
         }
 
@@ -217,7 +223,13 @@ namespace VelsatBackendAPI.Data.Services
             }
             catch (Exception ex)
             {
-                throw;
+                Console.WriteLine($"[ERROR] Error obteniendo datos vehículo {placa}: {ex.Message}");
+                return new DatosVehiculo
+                {
+                    FechaActual = DateTime.Now,
+                    FechaGPS = null,
+                    Vehiculo = null
+                };
             }
         }
 
