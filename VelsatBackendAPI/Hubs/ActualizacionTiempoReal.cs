@@ -118,10 +118,14 @@ namespace VelsatBackendAPI.Hubs
                 }
 
                 // Crear nuevo timer - USANDO EL CONTEXTO ACTUAL DEL HUB
-                var timer = new Timer(async _ => await EnviarDatosDirectamente(username),
-                                    null,
-                                    TimeSpan.FromSeconds(1),
-                                    TimeSpan.FromSeconds(5));
+                var timer = new Timer(_ =>
+                {
+                    EnviarDatosDirectamente(username).ContinueWith(t =>
+                    {
+                        if (t.IsFaulted)
+                            Console.WriteLine($"[ERROR] Timer usuario {username}: {t.Exception?.GetBaseException().Message}");
+                    }, TaskContinuationOptions.OnlyOnFaulted);
+                }, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(5));
 
                 _userTimers[username] = timer;
             }
@@ -157,12 +161,7 @@ namespace VelsatBackendAPI.Hubs
             catch (Exception ex)
             {
                 Console.WriteLine($"[ERROR] Error enviando datos para {username}: {ex.Message}");
-
-                // Si hay error, detener el timer para evitar spam de errores
-                if (ex.Message.Contains("disposed") || ex.Message.Contains("ObjectDisposed"))
-                {
-                    DetenerTimer(username);
-                }
+                DetenerTimer(username);
             }
         }
     }

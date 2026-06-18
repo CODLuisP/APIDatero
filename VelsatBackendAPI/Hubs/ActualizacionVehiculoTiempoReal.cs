@@ -152,10 +152,14 @@ namespace APIDatero.Hubs
                 }
 
                 // Crear nuevo timer
-                var timer = new Timer(async _ => await EnviarDatosVehiculo(username, placa),
-                                    null,
-                                    TimeSpan.FromSeconds(1),
-                                    TimeSpan.FromSeconds(5));
+                var timer = new Timer(_ =>
+                {
+                    EnviarDatosVehiculo(username, placa).ContinueWith(t =>
+                    {
+                        if (t.IsFaulted)
+                            Console.WriteLine($"[ERROR] Timer vehículo {placa}: {t.Exception?.GetBaseException().Message}");
+                    }, TaskContinuationOptions.OnlyOnFaulted);
+                }, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(5));
 
                 _vehicleTimers[timerKey] = timer;
             }
@@ -198,12 +202,7 @@ namespace APIDatero.Hubs
                 catch (Exception ex)
                 {
                     Console.WriteLine($"[ERROR] Error enviando datos del vehículo {placa}: {ex.Message}");
-
-                    // Si hay error, detener el timer para evitar spam de errores
-                    if (ex.Message.Contains("disposed") || ex.Message.Contains("ObjectDisposed"))
-                    {
-                        DetenerTimerVehiculo(username, placa);
-                    }
+                    DetenerTimerVehiculo(username, placa);
                 }
             }
         }
