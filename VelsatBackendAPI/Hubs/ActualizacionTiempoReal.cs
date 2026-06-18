@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR;
 using VelsatBackendAPI.Data.Repositories;
 using VelsatBackendAPI.Model;
 
@@ -6,14 +6,15 @@ namespace VelsatBackendAPI.Hubs
 {
     public class ActualizacionTiempoReal : Hub
     {
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly IHubContext<ActualizacionTiempoReal> _hubContext;
         private static readonly Dictionary<string, Timer> _userTimers = new Dictionary<string, Timer>();
+        private static readonly Dictionary<string, bool> _userExecuting = new Dictionary<string, bool>();
         private static readonly object _lockObject = new object();
 
-        public ActualizacionTiempoReal(IUnitOfWork unitOfWork, IHubContext<ActualizacionTiempoReal> hubContext)
+        public ActualizacionTiempoReal(IServiceScopeFactory serviceScopeFactory, IHubContext<ActualizacionTiempoReal> hubContext)
         {
-            _unitOfWork = unitOfWork;
+            _serviceScopeFactory = serviceScopeFactory;
             _hubContext = hubContext;
         }
 
@@ -101,8 +102,6 @@ namespace VelsatBackendAPI.Hubs
             }
         }
 
-        // ============= MÉTODOS DEL TIMER SIMPLIFICADOS =============
-
         private void IniciarTimer(string username)
         {
             if (string.IsNullOrEmpty(username))
@@ -110,21 +109,26 @@ namespace VelsatBackendAPI.Hubs
 
             lock (_lockObject)
             {
-                // Si ya existe un timer para este usuario, lo detenemos primero
                 if (_userTimers.ContainsKey(username))
                 {
                     _userTimers[username].Dispose();
                     _userTimers.Remove(username);
                 }
+                _userExecuting.Remove(username);
 
-                // Crear nuevo timer - USANDO EL CONTEXTO ACTUAL DEL HUB
                 var timer = new Timer(_ =>
                 {
+                    lock (_lockObject)
+                    {
+                        if (_userExecuting.GetValueOrDefault(username)) return;
+                        _userExecuting[username] = true;
+                    }
                     EnviarDatosDirectamente(username).ContinueWith(t =>
                     {
+                        lock (_lockObject) { _userExecuting[username] = false; }
                         if (t.IsFaulted)
                             Console.WriteLine($"[ERROR] Timer usuario {username}: {t.Exception?.GetBaseException().Message}");
-                    }, TaskContinuationOptions.OnlyOnFaulted);
+                    });
                 }, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(5));
 
                 _userTimers[username] = timer;
@@ -143,19 +147,19 @@ namespace VelsatBackendAPI.Hubs
                     _userTimers[username].Dispose();
                     _userTimers.Remove(username);
                 }
+                _userExecuting.Remove(username);
             }
         }
 
-        // ✅ MÉTODO SIMPLE - Sin ServiceProvider, usando las dependencias inyectadas directamente
         private async Task EnviarDatosDirectamente(string username)
         {
+            using var scope = _serviceScopeFactory.CreateScope();
             try
             {
-                // Usar directamente las dependencias inyectadas en el constructor
-                var datosCargaActualizados = await _unitOfWork.DatosCargainicialService.ObtenerDatosCargaInicialAsync(username);
+                var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+                var datosCargaActualizados = await unitOfWork.DatosCargainicialService.ObtenerDatosCargaInicialAsync(username);
                 datosCargaActualizados.FechaActual = DateTime.Now;
 
-                // Enviar datos usando el HubContext inyectado
                 await _hubContext.Clients.Group(username).SendAsync("ActualizarDatos", datosCargaActualizados);
             }
             catch (Exception ex)

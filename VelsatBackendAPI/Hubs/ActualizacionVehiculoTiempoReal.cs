@@ -1,7 +1,6 @@
 ﻿using DocumentFormat.OpenXml.InkML;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.SignalR;
-using MySqlX.XDevAPI;
 using VelsatBackendAPI.Data.Repositories;
 
 namespace APIDatero.Hubs
@@ -11,6 +10,7 @@ namespace APIDatero.Hubs
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly IHubContext<ActualizacionVehiculoTiempoReal> _hubContext;
         private static readonly Dictionary<string, Timer> _vehicleTimers = new Dictionary<string, Timer>();
+        private static readonly Dictionary<string, bool> _vehicleExecuting = new Dictionary<string, bool>();
         private static readonly object _lockObject = new object();
 
         public ActualizacionVehiculoTiempoReal(
@@ -154,11 +154,17 @@ namespace APIDatero.Hubs
                 // Crear nuevo timer
                 var timer = new Timer(_ =>
                 {
+                    lock (_lockObject)
+                    {
+                        if (_vehicleExecuting.GetValueOrDefault(timerKey)) return;
+                        _vehicleExecuting[timerKey] = true;
+                    }
                     EnviarDatosVehiculo(username, placa).ContinueWith(t =>
                     {
+                        lock (_lockObject) { _vehicleExecuting[timerKey] = false; }
                         if (t.IsFaulted)
                             Console.WriteLine($"[ERROR] Timer vehículo {placa}: {t.Exception?.GetBaseException().Message}");
-                    }, TaskContinuationOptions.OnlyOnFaulted);
+                    });
                 }, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(5));
 
                 _vehicleTimers[timerKey] = timer;
@@ -179,6 +185,7 @@ namespace APIDatero.Hubs
                     _vehicleTimers[timerKey].Dispose();
                     _vehicleTimers.Remove(timerKey);
                 }
+                _vehicleExecuting.Remove(timerKey);
             }
         }
 

@@ -1,7 +1,7 @@
 ﻿using APIDatero.Model.Documentacion;
 using Dapper;
 using DocumentFormat.OpenXml.Spreadsheet;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 using System.Data;
 using System.Globalization;
 using System.Transactions;

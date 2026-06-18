@@ -1,6 +1,6 @@
 ﻿using APIDatero.Model;
 using Dapper;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -16,29 +16,31 @@ namespace VelsatBackendAPI.Data.Services
     public class DatosCargainicialService : IDatosCargainicialService
     {
         private readonly IDbConnectionFactory _connectionFactory;
-        private List<Geocercausu> _geocercaUsuarios;
-        private List<string> _deviceIds; // Variable global para los deviceIDs
-        private string _currentLogin; // Para trackear si cambió el usuario
+        private static List<Geocercausu> _geocercaUsuarios;
+        private static readonly object _geocercaLock = new object();
+        private List<string> _deviceIds;
+        private string _currentLogin;
 
         public DatosCargainicialService(IDbConnectionFactory connectionFactory)
         {
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
-            // Inicializar geocercas
-            InitializeGeocercas();
         }
 
-        private void InitializeGeocercas()
+        private void EnsureGeocercasLoaded()
         {
-            try
+            if (_geocercaUsuarios != null) return;
+            lock (_geocercaLock)
             {
-                using var connection = _connectionFactory.GetDefaultConnection();
-
-                _geocercaUsuarios = connection.Query<Geocercausu>("SELECT codigo, descripcion, latitud, longitud FROM geocercausu").ToList();
-            }
-            catch (Exception ex)
-            {
-                _geocercaUsuarios = new List<Geocercausu>();
+                if (_geocercaUsuarios != null) return;
+                try
+                {
+                    using var connection = _connectionFactory.GetDefaultConnection();
+                    _geocercaUsuarios = connection.Query<Geocercausu>("SELECT codigo, descripcion, latitud, longitud FROM geocercausu").ToList();
+                }
+                catch
+                {
+                    _geocercaUsuarios = new List<Geocercausu>();
+                }
             }
         }
 
@@ -78,16 +80,8 @@ namespace VelsatBackendAPI.Data.Services
 
         public Geocercausu ObtenerGeocercausuPorCodigo(string codigo)
         {
-            try
-            {
-                var geocercausu = _geocercaUsuarios.FirstOrDefault(gu => gu.Codigo.ToString() == codigo);
-
-                return geocercausu;
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
+            EnsureGeocercasLoaded();
+            return _geocercaUsuarios.FirstOrDefault(gu => gu.Codigo.ToString() == codigo);
         }
 
         public async Task<DatosCargainicial> ObtenerDatosCargaInicialAsync(string login)
