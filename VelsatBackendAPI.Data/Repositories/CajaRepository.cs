@@ -399,7 +399,7 @@ namespace VelsatBackendAPI.Data.Repositories
 
                 // Obtener detalles del despacho
                 var sqlDetalle = @"SELECT codigo, deviceID, codconductor FROM urbano_asigna WHERE codigo = @Codigo";
-                var detalle = await connection.QueryFirstOrDefaultAsync<dynamic>(sqlDetalle, new { Codigo = despacho.Codigo });
+                var detalle = await connection.QueryFirstOrDefaultAsync<dynamic>(sqlDetalle, new { Codigo = despacho.Codigo }, transaction);
                 if (detalle == null) return "Despacho no encontrado";
 
                 var codUnidad = (string)detalle.deviceID;
@@ -436,7 +436,7 @@ namespace VelsatBackendAPI.Data.Repositories
             catch (Exception ex)
             {
                 transaction?.Rollback();
-                return "Error al guardar";
+                return $"Error al guardar: {ex.Message}"; // temporal para debug
             }
         }
         //FIN
