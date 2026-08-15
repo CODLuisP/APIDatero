@@ -284,9 +284,47 @@ namespace VelsatBackendAPI.Data.Repositories
                     var despachoBase = g.First(); 
                     // Combinar todos los controles de todos los despachos del grupo
                     var todosLosControles = g.SelectMany(d => d.Controles); 
-                    // Agrupar controles por nombre y tomar el que tiene IsGPS = '0' si existe
-                    var controlesFiltrados = todosLosControles .GroupBy(c => c.Nom_control) .Select(gc => gc.OrderBy(c => c.IsGPS).First())// 0 viene antes que 1
-                    .ToList();
+                    // Agrupar controles por nombre; por defecto se prioriza el que tiene IsGPS = '0' (datero),
+                    // pero si su hora estimada retrocede respecto al control anterior (mezcla incorrecta de
+                    // fuentes datero/dataoffline), se usa la hora de la otra fuente en su lugar.
+                    var controlesAgrupados = todosLosControles
+                        .GroupBy(c => c.Nom_control)
+                        .Select(gc => new
+                        {
+                            Preferido = gc.OrderBy(c => c.IsGPS).First(), // 0 (datero) viene antes que 1 (GPS/dataoffline)
+                            Alternativo = gc.OrderByDescending(c => c.IsGPS).First()
+                        })
+                        .ToList();
+
+                    var controlesFiltrados = new List<PuntoControl>();
+                    TimeSpan? horaEsperadaAnterior = null;
+
+                    foreach (var item in controlesAgrupados)
+                    {
+                        var elegido = item.Preferido;
+                        var esValido = TimeSpan.TryParse(elegido.Hora_estimada, out var horaEsperadaElegida);
+
+                        if (horaEsperadaAnterior.HasValue && esValido && horaEsperadaElegida < horaEsperadaAnterior.Value)
+                        {
+                            // La hora esperada del control preferido es menor a la del control anterior,
+                            // lo cual es físicamente imposible: se intenta usar la hora de la otra fuente.
+                            if (!ReferenceEquals(item.Alternativo, elegido) &&
+                                TimeSpan.TryParse(item.Alternativo.Hora_estimada, out var horaEsperadaAlterna) &&
+                                horaEsperadaAlterna >= horaEsperadaAnterior.Value)
+                            {
+                                elegido = item.Alternativo;
+                                esValido = true;
+                                horaEsperadaElegida = horaEsperadaAlterna;
+                            }
+                        }
+
+                        controlesFiltrados.Add(elegido);
+
+                        if (esValido)
+                        {
+                            horaEsperadaAnterior = horaEsperadaElegida;
+                        }
+                    }
 
 
             return new DespachoAgrupado
