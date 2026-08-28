@@ -169,7 +169,7 @@ namespace VelsatBackendAPI.Data.Repositories
 
         public async Task<IEnumerable<ConexDevice>> GetConexDesconex()
         {
-            var sql = @"SELECT deviceID, accountID, lastValidSpeed, lastGPSTimestamp, deviceCode, imeiNumber, lastValidLatitude, lastValidLongitude FROM device ORDER BY accountID";
+            var sql = @"SELECT deviceID, accountID, lastValidSpeed, lastGPSTimestamp, deviceCode, imeiNumber, lastValidLatitude, lastValidLongitude, deviceTIme FROM device ORDER BY accountID";
 
             using var connection = CreateConnection();
             return await connection.QueryAsync<ConexDevice>(sql);

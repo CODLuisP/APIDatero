@@ -16,5 +16,6 @@ namespace VelsatBackendAPI.Model.Administracion
         public string ImeiNumber { get; set; }
         public string LastValidLatitude { get; set; }
         public string LastValidLongitude { get; set; }
+        public int? DeviceTIme { get; set; }
     }
 }
