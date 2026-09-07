@@ -659,27 +659,44 @@ namespace VelsatBackendAPI.Data.Repositories
             if (logs == null || logs.Length == 0)
                 return "No hay registros para procesar";
 
-            // Usar INSERT normal para "etudvrb", INSERT IGNORE para otros usuarios
-            string sql = @"INSERT IGNORE INTO control_gpse (codasig, deviceID, nom_control, hora_inicio, hora_estimada, hora_llegada, volado, fecha) 
-            VALUES (@Codasig, @DeviceID, @NomControl, @HoraInicio, @HoraEstimada, @HoraLlegada, @Volado, @Fecha)";
-
-            var parametros = logs.Select(gps => new
-            {
-                Codasig = gps.Codasig,
-                DeviceID = gps.DeviceID,
-                NomControl = gps.Nom_control,
-                HoraInicio = gps.Hora_inicio,
-                HoraEstimada = gps.Hora_estimada,
-                HoraLlegada = gps.Hora_llegada,
-                Volado = gps.Volado,
-                Fecha = gps.Fecha
-            });
-
             using var connection = CreateConnection();
 
             try
             {
-                var registrosInsertados = await connection.ExecuteAsync(sql, parametros);
+                var registrosInsertados = 0;
+
+                // Insertar en lotes con un único INSERT multi-fila por lote, en vez de
+                // un round-trip por registro (Dapper ejecuta un comando por cada
+                // elemento cuando se le pasa un IEnumerable), que con muchos registros
+                // dispara la latencia total y puede provocar timeouts en el cliente.
+                const int tamanoLote = 100;
+
+                foreach (var lote in logs.Chunk(tamanoLote))
+                {
+                    var valores = new List<string>();
+                    var parametros = new DynamicParameters();
+
+                    for (int i = 0; i < lote.Length; i++)
+                    {
+                        var gps = lote[i];
+                        valores.Add($"(@Codasig{i}, @DeviceID{i}, @NomControl{i}, @HoraInicio{i}, @HoraEstimada{i}, @HoraLlegada{i}, @Volado{i}, @Fecha{i})");
+
+                        parametros.Add($"Codasig{i}", gps.Codasig);
+                        parametros.Add($"DeviceID{i}", gps.DeviceID);
+                        parametros.Add($"NomControl{i}", gps.Nom_control);
+                        parametros.Add($"HoraInicio{i}", gps.Hora_inicio);
+                        parametros.Add($"HoraEstimada{i}", gps.Hora_estimada);
+                        parametros.Add($"HoraLlegada{i}", gps.Hora_llegada);
+                        parametros.Add($"Volado{i}", gps.Volado);
+                        parametros.Add($"Fecha{i}", gps.Fecha);
+                    }
+
+                    string sql = @"INSERT IGNORE INTO control_gpse (codasig, deviceID, nom_control, hora_inicio, hora_estimada, hora_llegada, volado, fecha)
+            VALUES " + string.Join(",", valores);
+
+                    registrosInsertados += await connection.ExecuteAsync(sql, parametros);
+                }
+
                 return $"Se procesaron {registrosInsertados} de {logs.Length} registros correctamente";
             }
             catch (Exception ex)
