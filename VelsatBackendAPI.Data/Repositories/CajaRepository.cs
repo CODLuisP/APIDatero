@@ -178,7 +178,7 @@ namespace VelsatBackendAPI.Data.Repositories
 
         public async Task<List<DespachoVilla>> ListDespachoIniciado(string codruta)
         {
-            var fecsys = DateTimeOffset.UtcNow.ToUnixTimeSeconds() - 28800;
+            var fecsys = DateTimeOffset.UtcNow.ToUnixTimeSeconds() - 18000; // 5 horas (offset America/Lima, UTC-5)
             var fecha = fecsys;
 
             string sql = @"SELECT a.codigo, a.deviceID, a.fechaini, a.fechafin, a.fecprog, t.nombres, t.codtaxi, t.apellidos, d.ultimocontrol as nombrecontrol, a.eliminado, a.boletos FROM urbano_asigna a JOIN taxi t ON a.codconductor = t.codtaxi JOIN device d ON a.deviceID = d.deviceID WHERE a.eliminado = 0 AND a.codruta = @Codruta AND a.fechaini >= @Fechaini ORDER BY a.fechaini DESC LIMIT 300";
@@ -247,7 +247,7 @@ namespace VelsatBackendAPI.Data.Repositories
             {
                 var fecProgConSegundos = despacho.Fecprog + ":00";
                 var fecDateTime = DateTime.ParseExact(fecProgConSegundos, "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
-                var feciniUnix = new DateTimeOffset(fecDateTime).ToUnixTimeSeconds();
+                var feciniUnix = new DateTimeOffset(fecDateTime, TimeSpan.FromHours(-5)).ToUnixTimeSeconds(); // offset explícito America/Lima, no depende de la TZ del contenedor
                 var fecsysUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                 string fecini = feciniUnix.ToString();
                 string fecreg = fecsysUnix.ToString();
@@ -391,8 +391,6 @@ namespace VelsatBackendAPI.Data.Repositories
             using var transaction = connection.BeginTransaction();
             try
             {
-                // Timestamp actual en segundos (UTC - 8h)
-                var fecelimUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds() - 28800;
                 var zonaLima = TimeZoneInfo.FindSystemTimeZoneById("SA Pacific Standard Time"); // Windows
                 var fechaLima = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, zonaLima);
                 var fecelim = fechaLima.ToUnixTimeSeconds().ToString();
