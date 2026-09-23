@@ -592,6 +592,11 @@ namespace VelsatBackendAPI.Data.Repositories
             using var connection = CreateConnection();
             var resultados = await connection.QueryAsync(consulta, new { Fecha1 = timestamp1, Fecha2 = timestamp2, Ruta = ruta });
 
+            // Ruta 25 (etudvrb) es ida y vuelta y puede tomar hasta 171 min en
+            // condiciones normales, por eso necesita una ventana más amplia que
+            // las rutas de etudv22 (11/12, ~85 min) cuando no hay fechafin real.
+            var fallbackSeconds = ruta == "25" ? 14400 : 6300;
+
             return resultados.Select(row => new DeviceDespachadas
             {
                 Codigo = row.codigo,
@@ -599,7 +604,7 @@ namespace VelsatBackendAPI.Data.Repositories
                 Fechaini = ConvertirTimestampAHora(row.fechaini),
                 Fechafin = row.fechafin != null
                     ? ConvertirTimestampAHora(row.fechafin + 1559)
-                    : ConvertirTimestampAHora(row.fechaini + 6300)
+                    : ConvertirTimestampAHora(row.fechaini + fallbackSeconds)
             });
         }
 
