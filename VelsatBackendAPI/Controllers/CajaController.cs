@@ -241,7 +241,7 @@ namespace VelsatBackendAPI.Controllers
                 var codasig = await _unitOfWork.CajaRepository.ObtenerUltimoCodasig(despacho.Carro.Codunidad);
 
                 // Notificar a la app de consola (etudvrg - Puerto 5001)
-                _ = NotificarAppConsolaG(despacho.Carro.Codunidad, datosRecientes?.Fechaini, codasig);
+                _ = NotificarAppConsolaG(despacho.Carro.Codunidad, datosRecientes?.Fechaini, codasig, despacho.Ruta.Codigo);
 
                 return Ok(new { mensaje = resultado });
             }
@@ -251,7 +251,7 @@ namespace VelsatBackendAPI.Controllers
             }
         }
 
-        private async Task NotificarAppConsolaG(string placa, string fechaIni, string codasig)
+        private async Task NotificarAppConsolaG(string placa, string fechaIni, string codasig, string codruta)
         {
             try
             {
@@ -264,7 +264,8 @@ namespace VelsatBackendAPI.Controllers
                         placa = placa,
                         usuario = "etudvrg",
                         fechaIni = fechaIni,
-                        codasig = codasig
+                        codasig = codasig,
+                        codruta = codruta
                     };
 
                     var json = System.Text.Json.JsonSerializer.Serialize(payload);
