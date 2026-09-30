@@ -287,12 +287,26 @@ namespace VelsatBackendAPI.Data.Repositories
                     // Agrupar controles por nombre; por defecto se prioriza el que tiene IsGPS = '0' (datero),
                     // pero si su hora estimada retrocede respecto al control anterior (mezcla incorrecta de
                     // fuentes datero/dataoffline), se usa la hora de la otra fuente en su lugar.
+                    // Para ciertos controles (ej. PACÍFICO) se invierte la prioridad por defecto y se
+                    // prefiere la fuente dataoffline (IsGPS = '1') sobre datero.
+                    var controlesConPrioridadDataoffline = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                    {
+                        "PACIFICO",
+                    };
+
                     var controlesAgrupados = todosLosControles
                         .GroupBy(c => c.Nom_control)
-                        .Select(gc => new
+                        .Select(gc =>
                         {
-                            Preferido = gc.OrderBy(c => c.IsGPS).First(), // 0 (datero) viene antes que 1 (GPS/dataoffline)
-                            Alternativo = gc.OrderByDescending(c => c.IsGPS).First()
+                            var prioridadDataoffline = controlesConPrioridadDataoffline.Contains(gc.Key ?? "");
+                            var ordenado = prioridadDataoffline
+                                ? gc.OrderByDescending(c => c.IsGPS).ToList()  // 1 (GPS/dataoffline) viene antes que 0 (datero)
+                                : gc.OrderBy(c => c.IsGPS).ToList();           // 0 (datero) viene antes que 1 (GPS/dataoffline)
+                            return new
+                            {
+                                Preferido = ordenado.First(),
+                                Alternativo = ordenado.Last()
+                            };
                         })
                         .ToList();
 
