@@ -132,7 +132,7 @@ namespace VelsatBackendAPI.Data.Repositories
         public async Task<string> EndRuta(string deviceID)
         {
             const string sql1 = @"UPDATE device SET rutaact = '0', feciniruta = '0', origen = NULL, destino = NULL WHERE deviceID = @DeviceID";
-            const string sql2 = @"UPDATE urbano_asigna SET isruta = '0', fechafin = @Fechaact WHERE deviceID = @DeviceID ORDER BY codigo DESC LIMIT 1";
+            const string sql2 = @"UPDATE urbano_asigna SET isruta = '0', fechafin = @Fechaact WHERE deviceID = @DeviceID AND isruta = '1' ORDER BY codigo DESC LIMIT 1";
             const string sql3 = @"UPDATE recent_urbano SET fechaini = NULL, isruta = '0' WHERE deviceID = @DeviceID";
 
             var fechaActual = DateTimeOffset.Now.ToUnixTimeSeconds();
