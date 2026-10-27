@@ -619,7 +619,7 @@ namespace VelsatBackendAPI.Data.Repositories
 
         private async Task<List<Despacho>> ListaVueltasAsync(string fechaini, string fechafin, string ruta)
         {
-            string sql = @"SELECT a.deviceid, r.nombre as ruta, t.apellidos, a.eliminado, FROM_UNIXTIME(a.fechaini,'%H:%i') as fechainicio, FROM_UNIXTIME(a.fechafin,'%H:%i') as fechafin FROM gestion_villa.urbano_asigna a, taxi t, rutaurbano r WHERE a.codruta = r.codigo AND a.codconductor = t.codtaxi AND a.codruta = @Ruta AND a.fechaini >= @Fechaini AND a.fechaini <= @Fechafin ORDER BY a.fechaini";
+            string sql = @"SELECT a.deviceid, r.nombre as ruta, t.apellidos, a.eliminado, FROM_UNIXTIME(a.fechaini,'%H:%i') as fechainicio, FROM_UNIXTIME(a.fechafin,'%H:%i') as fechafin FROM urbano_asigna a, taxi t, rutaurbano r WHERE a.codruta = r.codigo AND a.codconductor = t.codtaxi AND a.codruta = @Ruta AND a.fechaini >= @Fechaini AND a.fechaini <= @Fechafin ORDER BY a.fechaini";
 
             using var connection = CreateConnection();
             var resultado = await connection.QueryAsync(sql, new { Ruta = ruta, Fechaini = fechaini, Fechafin = fechafin });
