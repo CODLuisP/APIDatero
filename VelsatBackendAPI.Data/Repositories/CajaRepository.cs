@@ -549,7 +549,7 @@ namespace VelsatBackendAPI.Data.Repositories
 
         private async Task<List<Carro>> GetCarrosFromDeviceUserAsync(string userId)
         {
-            string sql = @"SELECT DeviceName, DeviceID FROM DeviceUser WHERE UserID = @UserId AND Status = '1' ORDER BY DeviceName";
+            string sql = @"SELECT DeviceName, DeviceID FROM deviceuser WHERE UserID = @UserId AND Status = '1' ORDER BY DeviceName";
 
             using var connection = CreateConnection();
             var resultado = await connection.QueryAsync(sql, new { UserId = userId });
