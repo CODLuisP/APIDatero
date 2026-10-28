@@ -209,7 +209,7 @@ namespace VelsatBackendAPI.Controllers
                     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                     var response = await client.PostAsync(
-                        "http://66.240.210.125:5003/api/iniciar-monitoreo",
+                        "http://datero-web-b:5003/api/iniciar-monitoreo",
                         content
                     );
                 }
@@ -272,7 +272,7 @@ namespace VelsatBackendAPI.Controllers
                     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                     var response = await client.PostAsync(
-                        "http://66.240.210.125:5001/api/iniciar-monitoreo",
+                        "http://datero-web-g:8080/api/iniciar-monitoreo",
                         content
                     );
                 }
@@ -335,7 +335,7 @@ namespace VelsatBackendAPI.Controllers
                     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                     var response = await client.PostAsync(
-                        "http://66.240.210.125:5002/api/iniciar-monitoreo",
+                        "http://datero-web-22:8080/api/iniciar-monitoreo",
                         content
                     );
 
@@ -398,7 +398,7 @@ namespace VelsatBackendAPI.Controllers
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 var response = await client.PostAsync(
-                    "http://66.240.210.125:5004/api/iniciar-monitoreo", content);
+                    "http://datero-wuaylluy:8080/api/iniciar-monitoreo", content);
 
             }
             catch (Exception ex)
