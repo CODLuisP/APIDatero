@@ -370,5 +370,105 @@ namespace VelsatBackendAPI.Controllers
                 return StatusCode(500, new { message = "Error al obtener la auditoría general", error = ex.Message });
             }
         }
+
+        // ---------- REDIRECCIÓN DE USUARIOS (serverprueba) ----------
+
+        private static string? ValidarRedir(RedirUsuario? r)
+        {
+            if (r == null) return "El registro no puede ser nulo";
+            if (string.IsNullOrWhiteSpace(r.Loginusu) || r.Loginusu.Trim().Length > 45) return "loginusu es obligatorio (máx. 45 caracteres)";
+            if (string.IsNullOrWhiteSpace(r.Servidor) || r.Servidor.Trim().Length > 80) return "servidor es obligatorio (máx. 80 caracteres)";
+            r.Loginusu = r.Loginusu.Trim();
+            r.Servidor = r.Servidor.Trim();
+            return null;
+        }
+
+        [HttpGet("Redir/web")]
+        public async Task<IActionResult> GetRedir([FromQuery] string loginusu)
+        {
+            if (string.IsNullOrWhiteSpace(loginusu)) return BadRequest(new { message = "El loginusu es obligatorio" });
+
+            try
+            {
+                var registros = await _unitOfWork.AdminRepository.GetRedirByLogin(loginusu.Trim());
+                return Ok(registros);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error al obtener los registros de redirección", error = ex.Message });
+            }
+        }
+
+        [HttpPost("Redir/web")]
+        public async Task<IActionResult> InsertRedir([FromBody] RedirUsuario redir, [FromQuery] string actor, [FromQuery] string motivo)
+        {
+            var error = ValidarRedir(redir);
+            if (error != null) return BadRequest(new { message = error });
+
+            if (!MotivoValido(motivo))
+                return BadRequest(new { message = "El motivo es obligatorio y debe tener al menos 6 caracteres" });
+
+            try
+            {
+                var id = await _unitOfWork.AdminRepository.InsertRedir(redir);
+
+                await _unitOfWork.AdminRepository.RegistrarAuditoria(actor, "Redir. Usuarios", "Crear", redir.Loginusu, $"Se creó la redirección web de {redir.Loginusu} hacia {redir.Servidor}. Motivo: {motivo.Trim()}");
+
+                return Ok(new { message = "Registro creado correctamente", id });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error al crear el registro de redirección", error = ex.Message });
+            }
+        }
+
+        [HttpPut("Redir/web")]
+        public async Task<IActionResult> UpdateRedir([FromBody] RedirUsuario redir, [FromQuery] string actor, [FromQuery] string motivo)
+        {
+            var error = ValidarRedir(redir);
+            if (error != null) return BadRequest(new { message = error });
+
+            if (!MotivoValido(motivo))
+                return BadRequest(new { message = "El motivo es obligatorio y debe tener al menos 6 caracteres" });
+
+            try
+            {
+                var rowsAffected = await _unitOfWork.AdminRepository.UpdateRedir(redir);
+
+                if (rowsAffected == 0)
+                    return NotFound(new { message = "Registro no encontrado" });
+
+                await _unitOfWork.AdminRepository.RegistrarAuditoria(actor, "Redir. Usuarios", "Actualizar", redir.Loginusu, $"Se actualizó la redirección web #{redir.Id} de {redir.Loginusu} hacia {redir.Servidor}. Motivo: {motivo.Trim()}");
+
+                return Ok(new { message = "Registro actualizado correctamente", rowsAffected });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error al actualizar el registro de redirección", error = ex.Message });
+            }
+        }
+
+        [HttpDelete("Redir/web/{id:int}")]
+        public async Task<IActionResult> DeleteRedir(int id, [FromQuery] string loginusu, [FromQuery] string actor, [FromQuery] string motivo)
+        {
+            if (!MotivoValido(motivo))
+                return BadRequest(new { message = "El motivo es obligatorio y debe tener al menos 6 caracteres" });
+
+            try
+            {
+                var rowsAffected = await _unitOfWork.AdminRepository.DeleteRedir(id);
+
+                if (rowsAffected == 0)
+                    return NotFound(new { message = "Registro no encontrado" });
+
+                await _unitOfWork.AdminRepository.RegistrarAuditoria(actor, "Redir. Usuarios", "Eliminar", loginusu ?? id.ToString(), $"Se eliminó la redirección web #{id} de {loginusu}. Motivo: {motivo.Trim()}");
+
+                return Ok(new { message = "Registro eliminado correctamente", id });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error al eliminar el registro de redirección", error = ex.Message });
+            }
+        }
     }
 }

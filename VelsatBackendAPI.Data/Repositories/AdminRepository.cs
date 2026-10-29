@@ -211,5 +211,38 @@ namespace VelsatBackendAPI.Data.Repositories
                 Usuario = string.IsNullOrWhiteSpace(usuario) ? null : usuario
             });
         }
+
+        public async Task<IEnumerable<RedirUsuario>> GetRedirByLogin(string loginusu)
+        {
+            var sql = @"SELECT id, loginusu, servidor FROM serverprueba WHERE loginusu = @Loginusu ORDER BY id";
+
+            using var connection = CreateConnection();
+            return await connection.QueryAsync<RedirUsuario>(sql, new { Loginusu = loginusu });
+        }
+
+        public async Task<int> InsertRedir(RedirUsuario redir)
+        {
+            var sql = @"INSERT INTO serverprueba (loginusu, servidor) VALUES (@Loginusu, @Servidor); SELECT LAST_INSERT_ID();";
+
+            using var connection = CreateConnection();
+            redir.Id = await connection.ExecuteScalarAsync<int>(sql, redir);
+            return redir.Id;
+        }
+
+        public async Task<int> UpdateRedir(RedirUsuario redir)
+        {
+            var sql = @"UPDATE serverprueba SET loginusu = @Loginusu, servidor = @Servidor WHERE id = @Id";
+
+            using var connection = CreateConnection();
+            return await connection.ExecuteAsync(sql, redir);
+        }
+
+        public async Task<int> DeleteRedir(int id)
+        {
+            var sql = @"DELETE FROM serverprueba WHERE id = @Id";
+
+            using var connection = CreateConnection();
+            return await connection.ExecuteAsync(sql, new { Id = id });
+        }
     }
 }

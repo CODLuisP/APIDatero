@@ -35,6 +35,15 @@ namespace VelsatBackendAPI.Data.Repositories
 
         Task<IEnumerable<ConexDevice>> GetConexDesconex();
 
+        //REDIRECCIÓN DE USUARIOS (serverprueba)
+        Task<IEnumerable<RedirUsuario>> GetRedirByLogin(string loginusu);
+
+        Task<int> InsertRedir(RedirUsuario redir);
+
+        Task<int> UpdateRedir(RedirUsuario redir);
+
+        Task<int> DeleteRedir(int id);
+
         //AUDITORÍA GENERAL (registro de movimientos)
         Task RegistrarAuditoria(string usuario, string modulo, string accion, string entidad, string detalle);
 
