@@ -513,6 +513,52 @@ namespace VelsatBackendAPI.Controllers
         }
 
 
+        [HttpGet("propietarios/{usuario}")]
+        public async Task<ActionResult<List<Propietario>>> GetPropietariosByUsuario(string usuario)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(usuario))
+                {
+                    return BadRequest("El parámetro usuario es requerido");
+                }
+
+                var propietarios = await _unitOfWork.CajaRepository.GetPropietariosxUsuario(usuario);
+
+                // Lista vacía (200) si la cuenta no tiene unidades con subusuario
+                return Ok(propietarios);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Error interno del servidor");
+            }
+        }
+
+        [HttpPut("propietarios/{usuario}/{userId}")]
+        public async Task<IActionResult> ActualizarPropietario(string usuario, string userId, [FromBody] PropietarioUpdateRequest datos)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(usuario) || string.IsNullOrWhiteSpace(userId) || datos == null)
+                {
+                    return BadRequest(new { message = "Datos incompletos" });
+                }
+
+                var filas = await _unitOfWork.CajaRepository.ActualizarPropietarioAsync(usuario, userId, datos);
+
+                if (filas == 0)
+                {
+                    return NotFound(new { message = "Propietario no encontrado para esta cuenta" });
+                }
+
+                return Ok(new { message = "Propietario actualizado correctamente", userId });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { message = "Error interno del servidor" });
+            }
+        }
+
         [HttpGet("vueltas")]
         public async Task<IActionResult> GetReporteVueltas([FromQuery] string fecha, [FromQuery] string ruta)
         {

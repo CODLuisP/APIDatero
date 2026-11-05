@@ -522,6 +522,75 @@ namespace VelsatBackendAPI.Data.Repositories
             return conductores.ToList();
         }
 
+        private const string FiltroPropietarioCuenta = @"du.Status = '1'
+                             AND (du.superusu = @Cuenta
+                                  OR du.DeviceID IN (SELECT d.deviceID FROM device d WHERE d.accountID = @Cuenta))";
+
+        public async Task<List<Propietario>> GetPropietariosxUsuario(string usuario)
+        {
+            // Unidades de la cuenta (device.accountID) o asignadas a ella (superusu) con subusuario activo
+            string sqlUnidades = $@"SELECT du.id AS Id, du.UserId AS UserId, du.DeviceName AS Placa, du.DeviceID AS DeviceID
+                           FROM deviceuser du
+                           WHERE {FiltroPropietarioCuenta}
+                           ORDER BY du.UserId, du.DeviceName";
+
+            using var connection = CreateConnection();
+            var filas = (await connection.QueryAsync<(int Id, string UserId, string? Placa, string? DeviceID)>(sqlUnidades, new { Cuenta = usuario })).ToList();
+
+            if (filas.Count == 0) return new List<Propietario>();
+
+            var ids = filas.Select(f => f.UserId).Where(u => !string.IsNullOrEmpty(u)).Distinct().ToList();
+
+            string sqlUsuarios = @"SELECT accountID AS UserId, contactName AS ContactName, contactPhone AS ContactPhone,
+                                          contactEmail AS ContactEmail, password AS Password, description AS Description,
+                                          notes AS Notes, ruc AS Ruc, isActive AS IsActive, lastLoginTime AS LastLoginTime
+                                   FROM usuarios WHERE accountID IN @Ids";
+            var datos = (await connection.QueryAsync<Propietario>(sqlUsuarios, new { Ids = ids }))
+                .GroupBy(u => u.UserId)
+                .ToDictionary(g => g.Key, g => g.First());
+
+            var resultado = new List<Propietario>();
+            foreach (var grupo in filas.GroupBy(f => f.UserId))
+            {
+                if (string.IsNullOrEmpty(grupo.Key)) continue;
+                var p = datos.TryGetValue(grupo.Key, out var d) ? d : new Propietario { UserId = grupo.Key };
+                p.Unidades = grupo.Select(f => new PropietarioUnidad { Id = f.Id, Placa = f.Placa, DeviceID = f.DeviceID }).ToList();
+                resultado.Add(p);
+            }
+
+            return resultado.OrderBy(p => p.UserId).ToList();
+        }
+
+        public async Task<int> ActualizarPropietarioAsync(string usuario, string userId, PropietarioUpdateRequest datos)
+        {
+            // Solo permite editar subusuarios que pertenecen a la cuenta que realiza la acción.
+            // La contraseña solo se cambia si viene informada.
+            string sql = $@"UPDATE usuarios
+                           SET contactName = @ContactName,
+                               contactPhone = @ContactPhone,
+                               contactEmail = @ContactEmail,
+                               description = @Description,
+                               notes = @Notes,
+                               password = IF(@Password IS NULL OR @Password = '', password, @Password),
+                               lastUpdateTime = @Ahora
+                           WHERE accountID = @UserId
+                             AND EXISTS (SELECT 1 FROM deviceuser du WHERE du.UserId = @UserId AND {FiltroPropietarioCuenta})";
+
+            using var connection = CreateConnection();
+            return await connection.ExecuteAsync(sql, new
+            {
+                Cuenta = usuario,
+                UserId = userId,
+                datos.ContactName,
+                datos.ContactPhone,
+                datos.ContactEmail,
+                datos.Description,
+                datos.Notes,
+                datos.Password,
+                Ahora = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+            });
+        }
+
         private async Task<List<Carro>> GetCarrosFromDeviceAsync(string accountId)
         {
             string sql = @"SELECT deviceID, habilitada, rutadefault FROM device WHERE accountID = @AccountId ORDER BY deviceID";

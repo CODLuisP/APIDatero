@@ -40,6 +40,10 @@ namespace VelsatBackendAPI.Data.Repositories
 
         Task<List<Conductor>> GetCobradoresxUsuario(string usuario);
 
+        Task<List<Propietario>> GetPropietariosxUsuario(string usuario);
+
+        Task<int> ActualizarPropietarioAsync(string usuario, string userId, PropietarioUpdateRequest datos);
+
         Task<List<Carro>> ReporteVueltas(string fecha, string ruta);
 
         Task<int> NuevoConductorAsync(Conductor conductor, string usuario);
