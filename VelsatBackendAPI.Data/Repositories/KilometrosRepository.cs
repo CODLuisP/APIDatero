@@ -247,9 +247,9 @@ namespace VelsatBackendAPI.Data.Repositories
             {
                 string consultaTabla = nombreTabla.Tabla;
 
-                // Consultar cada tabla histórica
-                string sqlR = $"select deviceID, MAX(odometerKM) AS maximo, MIN(odometerKM) AS minimo " +
-                    $"from {consultaTabla} where deviceID in (select deviceID from device where accountID=@AccountID) and timestamp between @FechainiUnix and @FechafinUnix group by deviceID";
+                // Consultar cada tabla histórica (urb_his no tiene tabla device: se filtra por accountID de la propia tabla)
+                string sqlR = $"select deviceID, MAX(odometerKM) AS maximo, MIN(odometerKM) AS minimo, (MAX(odometerKM) - MIN(odometerKM)) as kilometros " +
+                    $"from {consultaTabla} where accountID = @AccountID and timestamp between @FechainiUnix and @FechafinUnix group by deviceID";
 
                 var parameters = new DynamicParameters();
                 parameters.Add("FechainiUnix", unixFechaInicio);
@@ -266,8 +266,8 @@ namespace VelsatBackendAPI.Data.Repositories
 
         private async Task<List<KilometrosRecorridos>> ConsultarEventDataKmAll(IDbConnection defaultConnection, string accountID, int unixFechaInicio, int unixFechaFin)
         {
-            string sqlEventData = $"select deviceID, MAX(odometerKM) AS maximo, MIN(odometerKM) AS minimo " +
-                $"from eventdata where deviceID in (select deviceID from device where accountID=@AccountID) and timestamp between @FechainiUnix and @FechafinUnix group by deviceID";
+            string sqlEventData = $"select deviceID, MAX(odometerKM) AS maximo, MIN(odometerKM) AS minimo, (MAX(odometerKM) - MIN(odometerKM)) as kilometros " +
+                $"from eventdata where accountID = @AccountID and timestamp between @FechainiUnix and @FechafinUnix group by deviceID";
 
             var parameters = new DynamicParameters();
             parameters.Add("FechainiUnix", unixFechaInicio);
