@@ -19,6 +19,7 @@ namespace VelsatBackendAPI.Model.GestionVilla
         public string? Brevete { get; set; }
         public string? Sctr { get; set; }
         public string? Direccion { get; set; }
+        public string? FecNacimiento { get; set; } // yyyy-MM-dd
         public string? Imagen { get; set; }
         public string? CatBrevete { get; set; }
         public string? FecValidBrevete { get; set; }

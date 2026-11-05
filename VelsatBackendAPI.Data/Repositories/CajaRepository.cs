@@ -453,6 +453,7 @@ namespace VelsatBackendAPI.Data.Repositories
                           brevete as Brevete, 
                           sctr as Sctr, 
                           direccion as Direccion, 
+                          DATE_FORMAT(fecnacimiento, '%Y-%m-%d') as FecNacimiento, 
                           imagen as Imagen, 
                           catbrevete as CatBrevete, 
                           fecvalidbrevete as FecValidBrevete, 
@@ -723,7 +724,7 @@ namespace VelsatBackendAPI.Data.Repositories
 
         public async Task<int> NuevoConductorAsync(Conductor conductor, string usuario)
         {
-            const string sqlConductor = @"INSERT INTO taxi (nombres, apellidos, login, clave, estado, codusuario, telefono, email, brevete, dni, direccion, sctr, catbrevete, estbrevete, fecvalidbrevete) VALUES (@Nombres, @Apellidos, @Login, @Clave, 'A', @Codusuario, @Telefono, @Email, @Brevete, @Dni, @Direccion, @Sctr, @Catbrevete, @Estbrevete, @Fecvalidbrevete); SELECT LAST_INSERT_ID();";
+            const string sqlConductor = @"INSERT INTO taxi (nombres, apellidos, login, clave, estado, codusuario, telefono, email, brevete, dni, direccion, fecnacimiento, sctr, catbrevete, estbrevete, fecvalidbrevete) VALUES (@Nombres, @Apellidos, @Login, @Clave, 'A', @Codusuario, @Telefono, @Email, @Brevete, @Dni, @Direccion, NULLIF(@FecNacimiento, ''), @Sctr, @Catbrevete, @Estbrevete, @Fecvalidbrevete); SELECT LAST_INSERT_ID();";
 
             using var connection = _connectionFactory.CreateConnection();
             connection.Open();
@@ -744,6 +745,7 @@ namespace VelsatBackendAPI.Data.Repositories
                     Brevete = conductor.Brevete,
                     Dni = conductor.Dni,
                     Direccion = conductor.Direccion,
+                    FecNacimiento = conductor.FecNacimiento,
                     Sctr = conductor.Sctr,
                     Catbrevete = conductor.CatBrevete,
                     Estbrevete = conductor.EstBrevete,
@@ -810,6 +812,7 @@ namespace VelsatBackendAPI.Data.Repositories
             brevete = @Brevete, 
             dni = @Dni, 
             direccion = @Direccion, 
+            fecnacimiento = NULLIF(@FecNacimiento, ''), 
             sctr = @Sctr, 
             catbrevete = @CatBrevete, 
             estbrevete = @EstBrevete, 
@@ -827,6 +830,7 @@ namespace VelsatBackendAPI.Data.Repositories
                 Brevete = conductor.Brevete,
                 Dni = conductor.Dni,
                 Direccion = conductor.Direccion,
+                FecNacimiento = conductor.FecNacimiento,
                 Sctr = conductor.Sctr,
                 CatBrevete = conductor.CatBrevete,
                 EstBrevete = conductor.EstBrevete,
